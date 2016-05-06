@@ -47,13 +47,13 @@ DotMatrix   matrix;
 DS3231 clk;
 
 // actual date
-//byte dateSecond,
-//     dateMinute,
-//     dateHour,
-//     dateDayOfWeek,
-//     dateDayOfMonth,
-//     dateMonth,
-//     dateYear;
+byte dateSecond,
+     dateMinute,
+     dateHour,
+     dateDayOfWeek,
+     dateDayOfMonth,
+     dateMonth,
+     dateYear;
 
 
 
@@ -80,12 +80,11 @@ DS3231 clk;
 void setup() {
     clk.setTime(0, 1, 1, 1, 1, 1, 0); // set time when programming the clock
     Serial.begin(9600);
-    
-    Serial.println("HELLO");
+    Serial.println("Alarm Clock v0.01");
     
     matrix.setup(4, A1, A2, 3); 
 //    ls.setPin(A3);
-    matrix.displayTime(00,00);
+//    matrix.displayTime(00,00);
 }
 
 void loop() {
@@ -124,6 +123,12 @@ void loop() {
 //          break;
 //  }
   delay(500);
-  clk.printTime();
-  Serial.println("Hello");   
+  clk.readTime(&dateSecond,
+     &dateMinute,
+     &dateHour,
+     &dateDayOfWeek,
+     &dateDayOfMonth,
+     &dateMonth,
+     &dateYear);
+  matrix.displayTime(dateHour, dateMinute);
 }

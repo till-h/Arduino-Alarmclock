@@ -14,7 +14,7 @@
  *  files that are included somewhere within the this file.
  */
 #include "Wire.h"
-//#include "Encoder.h"
+#include "Encoder.h"
 #include "LedControl.h"
 //#include "Loudspeaker.h"
 #include "DotMatrix.h"
@@ -23,45 +23,51 @@
 ///////////////////
 // Sign function from http://stackoverflow.com/a/4609795
 ///////////////////
-//template <typename T> int sgn(T val) {
-//    return (T(0) < val) - (val < T(0));
-//}
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 ///////////////////
 // Global variables
 ///////////////////
-//enum action {displayCurrentTime, displayAlarmTime, toggleAlarm};
-//action clockAction = displayCurrentTime;
-//bool alarmIsOn = false;
-//int lastEventTime = -1;
-//
-//struct aTime
-//{
-//    uint8_t h = 0; // hours
-//    uint8_t m = 0; // minutes
-//};
-//
-//aTime currentTime, alarmTime;
 
-DotMatrix   matrix;
+// State machine
+enum status {displayCurrentTime, displayAlarmTime, toggleAlarm};
+status clockStatus = displayCurrentTime;
+status lastStatus = displayCurrentTime;
+bool alarmIsOn = false;
+
+// Clock
 DS3231 clk;
+int lastEventTime = -1;
+
+struct aTime
+{
+    uint8_t h = 0; // hours
+    uint8_t m = 0; // minutes
+};
+
+aTime currentTime, alarmTime;
 
 // actual date
-byte dateSecond,
-     dateMinute,
-     dateHour,
-     dateDayOfWeek,
-     dateDayOfMonth,
-     dateMonth,
-     dateYear;
+byte currentSecond,
+     currentMinute,
+     currentHour,
+     currentDayOfWeek,
+     currentDayOfMonth,
+     currentMonth,
+     currentYear;
+byte lastMinute;
+
+// Dot matrix display
+DotMatrix matrix;
 
 
-
-
-//Encoder       enc(2, 5);
-//long          oldPosition  = 0;
-//unsigned long encoderLast = 0;
-//unsigned long fastRotThres = 100000; // in us
+// Rotary encoder
+Encoder       enc(2, 5);
+long          lastPosition  = 0;
+unsigned long timeLast = 0;
+unsigned long fastRotThres = 2*100000; // in us
 
 //Loudspeaker ls;
 
@@ -74,61 +80,67 @@ byte dateSecond,
 //void buttonDepressed()
 //{}
 
-/* Initialise classes
- * 
- */
 void setup() {
-    clk.setTime(0, 1, 1, 1, 1, 1, 0); // set time when programming the clock
     Serial.begin(9600);
     Serial.println("Alarm Clock v0.01");
+    // Set time when programming the clock
+    clk.setTime(0, 1, 1, 1, 1, 1, 0);
+    alarmTime.h = 20;
+    alarmTime.m = 20;
     
-    matrix.setup(4, A1, A2, 3); 
+    matrix.setup(4, A1, A2, 6); 
 //    ls.setPin(A3);
-//    matrix.displayTime(00,00);
 }
 
 void loop() {
-//  int positionDelta = 0;
-//   handle encoder rotation
-//  long newPosition = enc.read() / 4;
-//  if (newPosition != oldPosition) {
-//    unsigned long timeNow = micros();
-//    unsigned long timeDelta = timeNow - encoderLast;
-//    positionDelta = newPosition - oldPosition;
-//    if (timeDelta < fastRotThres) {
-//      positionDelta *= 5;
-//    }
-//    oldPosition = newPosition;
-//    encoderLast = timeNow;
-//  }
-  
-  
-//  switch(clockAction)
-//  {
-//      case displayCurrentTime:
-//        if (positionDelta != 0) {
-//          
-//          if (currentTime.m + positionDelta > 59) { currentTime.h = (currentTime.h + 1) % 24; }
-//          if (currentTime.m + positionDelta <  0) { currentTime.h = (currentTime.h - 1 + 24) % 24; }
-//          
-//          currentTime.m = (currentTime.m + positionDelta + 60) % 60;
-//          
-////          matrix.displayTime(currentTime.h, currentTime.m);
-//        }
-//      case displayAlarmTime:
-//        if (positionDelta != 0) {
-//          break;
-//        }
-//      case toggleAlarm:
-//          break;
-//  }
-  delay(500);
-  clk.readTime(&dateSecond,
-     &dateMinute,
-     &dateHour,
-     &dateDayOfWeek,
-     &dateDayOfMonth,
-     &dateMonth,
-     &dateYear);
-  matrix.displayTime(dateHour, dateMinute);
+    clockStatus = displayCurrentTime;
+    int positionDelta = 0;
+    
+    // Handle encoder rotation, inc. fast forward (rotation) mode
+    long currentPosition = enc.read() / 4;
+    Serial.println(currentPosition);
+    Serial.println(lastPosition);
+    if (currentPosition != lastPosition) {
+        unsigned long timeNow = micros();
+        unsigned long timeDelta = timeNow - timeLast;
+        positionDelta = currentPosition - lastPosition;
+        if (timeDelta < fastRotThres) {
+            Serial.println("Fast rotation mode.");
+            positionDelta *= 5;
+        }
+        lastPosition = currentPosition;
+        timeLast = timeNow;
+    }
+    if (positionDelta != 0)
+    {
+        Serial.println("positionDelta != 0"); 
+        clockStatus = displayAlarmTime;
+        if (alarmTime.m + positionDelta > 59) { alarmTime.h = (alarmTime.h + 1) % 24; }
+        if (alarmTime.m + positionDelta <  0) { alarmTime.h = (alarmTime.h - 1 + 24) % 24; }
+        alarmTime.m = (alarmTime.m + positionDelta + 60) % 60;
+    }
+    switch(clockStatus)
+    {
+        case displayCurrentTime:        
+            Serial.println("Case: displayCurrentTime"); 
+            clk.readTime(&currentSecond,
+                         &currentMinute,
+                         &currentHour,
+                         &currentDayOfWeek,
+                         &currentDayOfMonth,
+                         &currentMonth,
+                         &currentYear);
+//            if (currentMinute != lastMinute) // reverts to current time only after a minute, fix!
+//            {
+                matrix.displayTime(currentHour, currentMinute);
+                lastMinute = currentMinute;
+//            }
+            break;
+        case displayAlarmTime:
+            Serial.println("Case: displayAlarmTime"); 
+            matrix.displayTime(alarmTime.h, alarmTime.m);
+            break;        
+        case toggleAlarm:
+            break;
+    }
 }

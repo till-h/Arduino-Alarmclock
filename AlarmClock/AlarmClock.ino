@@ -8,7 +8,7 @@
 
 /*  Includes
  *  
- *  Including all libraries that are ever used inside the     
+ *  Including all libraries that are anywhere used inside the     
  *  project is necessary here if using the Arduino IDE for
  *  making the executable, because its linker links only
  *  files that are included somewhere within the this file.
@@ -33,7 +33,7 @@ template <typename T> int sgn(T val) {
 
 // State machine
 enum status {displayCurrentTime, displayAlarmTime, toggleAlarm};
-status clockStatus = displayCurrentTime;
+status currentStatus = displayCurrentTime;
 status lastStatus = displayCurrentTime;
 bool alarmIsOn = false;
 
@@ -47,9 +47,9 @@ struct aTime
     uint8_t m = 0; // minutes
 };
 
-aTime currentTime, alarmTime;
+aTime currentAlarmTime, lastAlarmTime;
 
-// actual date
+// To hold the actual date
 byte currentSecond,
      currentMinute,
      currentHour,
@@ -62,64 +62,68 @@ byte lastMinute;
 // Dot matrix display
 DotMatrix matrix;
 
-
 // Rotary encoder
 Encoder       enc(2, 5);
-long          lastPosition  = 0;
+long          currentPosition = 0;
+long          lastPosition = 0;
+int           positionDelta = 0;
+unsigned long timeNow = 0;
 unsigned long timeLast = 0;
 unsigned long fastRotThres = 2*100000; // in us
+unsigned long currentPress = 0;
+unsigned long lastPress = 0;
+
+// Encoder button callback function
+void buttonDepressed()
+{
+}
 
 //Loudspeaker ls;
-
-/////////////////////////////
-// Encoder callback functions
-/////////////////////////////
-//void buttonPressed()
-//{}
-//
-//void buttonDepressed()
-//{}
 
 void setup() {
     Serial.begin(9600);
     Serial.println("Alarm Clock v0.01");
     // Set time when programming the clock
     clk.setTime(0, 1, 1, 1, 1, 1, 0);
-    alarmTime.h = 20;
-    alarmTime.m = 20;
+    currentAlarmTime.h = 20;
+    currentAlarmTime.m = 20;
     
     matrix.setup(4, A1, A2, 6); 
 //    ls.setPin(A3);
 }
 
 void loop() {
-    clockStatus = displayCurrentTime;
-    int positionDelta = 0;
+    currentStatus = displayCurrentTime;
+    positionDelta = 0;
+    timeNow = micros();
     
-    // Handle encoder rotation, inc. fast forward (rotation) mode
-    long currentPosition = enc.read() / 4;
+    currentPosition = enc.read() / 4;
     Serial.println(currentPosition);
     Serial.println(lastPosition);
     if (currentPosition != lastPosition) {
-        unsigned long timeNow = micros();
         unsigned long timeDelta = timeNow - timeLast;
         positionDelta = currentPosition - lastPosition;
+        // Handle fast rotation
         if (timeDelta < fastRotThres) {
             Serial.println("Fast rotation mode.");
             positionDelta *= 5;
         }
+
+        if (currentAlarmTime.m + positionDelta > 59) { currentAlarmTime.h = (currentAlarmTime.h + 1) % 24; }
+        if (currentAlarmTime.m + positionDelta <  0) { currentAlarmTime.h = (currentAlarmTime.h - 1 + 24) % 24; }
+        currentAlarmTime.m = (currentAlarmTime.m + positionDelta + 60) % 60;
+        
         lastPosition = currentPosition;
-        timeLast = timeNow;
+        timeLast = timeNow;        
+        currentStatus = displayAlarmTime;
     }
-    if (positionDelta != 0)
+    // Continue to display alarm time for a while after the last rotation
+    else if (timeNow - timeLast < 1000000)
     {
-        Serial.println("positionDelta != 0"); 
-        clockStatus = displayAlarmTime;
-        if (alarmTime.m + positionDelta > 59) { alarmTime.h = (alarmTime.h + 1) % 24; }
-        if (alarmTime.m + positionDelta <  0) { alarmTime.h = (alarmTime.h - 1 + 24) % 24; }
-        alarmTime.m = (alarmTime.m + positionDelta + 60) % 60;
+        currentStatus = displayAlarmTime;
     }
-    switch(clockStatus)
+    
+    switch(currentStatus)
     {
         case displayCurrentTime:        
             Serial.println("Case: displayCurrentTime"); 
@@ -130,17 +134,14 @@ void loop() {
                          &currentDayOfMonth,
                          &currentMonth,
                          &currentYear);
-//            if (currentMinute != lastMinute) // reverts to current time only after a minute, fix!
-//            {
-                matrix.displayTime(currentHour, currentMinute);
-                lastMinute = currentMinute;
-//            }
+            matrix.displayTime(currentHour, currentMinute);
             break;
         case displayAlarmTime:
-            Serial.println("Case: displayAlarmTime"); 
-            matrix.displayTime(alarmTime.h, alarmTime.m);
+            Serial.println("Case: displayAlarmTime");
+            matrix.displayTime(currentAlarmTime.h, currentAlarmTime.m);
             break;        
         case toggleAlarm:
             break;
     }
+    lastStatus = currentStatus;
 }

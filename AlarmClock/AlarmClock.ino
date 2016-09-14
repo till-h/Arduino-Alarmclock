@@ -15,6 +15,7 @@
  */
 #include "Wire.h"
 #include "Encoder.h"
+#include "RotaryDial.h"
 #include "LedControl.h"
 #include "Loudspeaker.h"
 #include "DotMatrix.h"
@@ -54,17 +55,10 @@ byte lastMinute;
 // Dot matrix display
 DotMatrix matrix;
 
-// Rotary encoder TODO ENCAPSULATE STATE VARIABLES IN ENCODER CLASS
-Encoder       enc(2, 5);
-long          currentPosition = 0;
-long          lastPosition = 0;
-int           positionDelta = 0;
-unsigned long timeNow = 0;
-unsigned long timeLast = 0;
-unsigned long fastRotThres = 2*100000; // in us
-unsigned long currentPress = 0;
-unsigned long lastPress = 0;
-int buttonTimeout = 50000;
+// Rotary encoder
+RotaryDial dial(2, 5);
+unsigned int lastRotation = 0;
+unsigned int lastPress = 0;
 
 // Encoder button callback function
 void buttonDepressed()
@@ -91,27 +85,15 @@ void setup() {
 }
 
 void loop() {
-    currentStatus = displayCurrentTime;
-    positionDelta = 0;
-    timeNow = micros();
-    
-    currentPosition = enc.read() / 4;
-    if (currentPosition != lastPosition) {
-        unsigned long timeDelta = timeNow - timeLast;
-        positionDelta = currentPosition - lastPosition;
-        // Handle fast rotation
-        if (timeDelta < fastRotThres) {
-            Serial.println("Fast rotation mode.");
-            positionDelta *= 5;
-        }
-
-        if (alarmTime.m + positionDelta > 59) { alarmTime.h = (alarmTime.h + 1) % 24; }
-        if (alarmTime.m + positionDelta <  0) { alarmTime.h = (alarmTime.h - 1 + 24) % 24; }
-        alarmTime.m = (alarmTime.m + positionDelta + 60) % 60;
-        
-        lastPosition = currentPosition;
-        timeLast = timeNow;        
-        currentStatus = displayAlarmTime;
+    status = displayCurrentTime;
+    int rotation = dial.getRotation();
+    unsigned long now = micros();
+    if (rotation != 0) {
+        if (alarmTime.m + rotation > 59) { alarmTime.h = (alarmTime.h + 1) % 24; }
+        if (alarmTime.m + rotation <  0) { alarmTime.h = (alarmTime.h - 1 + 24) % 24; }
+        alarmTime.m = (alarmTime.m + rotation + 60) % 60;
+        status = displayAlarmTime;
+        lastRotation = now;
     }
     // Continue to display alarm time for a while after the last rotation
     else if (now - lastRotation < 1000000)

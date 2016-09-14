@@ -8,6 +8,9 @@
 */
 
 #include <DotMatrix.h>
+// Set font art for numbers
+//#define CALLIGRAPHY
+#define SANS
 
 DotMatrix::DotMatrix() {}
 
@@ -72,6 +75,7 @@ void DotMatrix::setColumn(uint8_t col, byte value)
     lc.setColumn(col / 8, col % 8, value);
 }
 
+#ifdef CALLIGRAPHY
 byte const DotMatrix::n[10][5] =
 {
     { // 0
@@ -145,6 +149,82 @@ byte const DotMatrix::n[10][5] =
         B11000000
     }
 };
+#endif
+#ifdef SANS
+byte const DotMatrix::n[10][5] =
+{
+    { // 0
+        B00000000,
+        B11111111,
+        B10000001,
+        B11111111,
+        B00000000
+    },
+    { // 1
+        B00000000,
+        B00000000,
+        B11111111,
+        B00000000,
+        B00000000
+    },
+    { // 2
+        B00000000,
+        B10011111,
+        B10010001,
+        B11110001,
+        B00000000
+    },
+    { // 3
+        B00000000,
+        B10010001,
+        B10010001,
+        B11111111,
+        B00000000
+    },
+    { // 4
+        B00000000,
+        B11111111,
+        B00010000,
+        B11110000,
+        B00000000
+    },
+    { // 5
+        B00000000,
+        B11110001,
+        B10010001,
+        B10011111,
+        B00000000
+    },
+    { // 6
+        B00000000,
+        B11111111,
+        B10010001,
+        B10011111,
+        B00000000
+    },
+    { // 7
+        B00000000,
+        B10000000,
+        B10000000,
+        B11111111,
+        B00000000
+    },
+    { // 8
+        B00000000,
+        B11111111,
+        B10010001,
+        B11111111,
+        B00000000
+    },
+    { // 9
+        B00000000,
+        B11111111,
+        B10010000,
+        B11110000,
+        B00000000
+    }
+};
+#endif
 
 byte const DotMatrix::clock[9] =
 {

@@ -23,8 +23,8 @@ public:
 private:
     void setColumn(uint8_t col, byte value);
     LedControl lc;
-    uint8_t           last_hour;
-    uint8_t           last_minute;
+    uint8_t           last_hour = 100;
+    uint8_t           last_minute = 100;
     unsigned long     last_update;
     static byte       const n[10][5];
     static byte       const clock[9];

@@ -21,6 +21,8 @@
 #include "DotMatrix.h"
 #include "DS3231.h"
 
+void get2Digits(char * arrayFrom, char * arrayTo, int startIndex);
+
 ///////////////////
 // Global variables
 ///////////////////
@@ -73,8 +75,15 @@ uint16_t lsFreq = 10000;
 void setup() {
     Serial.begin(9600);
     Serial.println("Alarm Clock v0.01");
-    // Set time when programming the clock
-    clk.setTime(0, 1, 1, 1, 1, 1, 0);
+    // Program clock with time of compilation
+    char h[3];
+    char m[3];
+    get2Digits(__TIME__, h, 0);
+    get2Digits(__TIME__, m, 3);
+    int hour = atoi(h);;
+    int minute = atoi(m);;
+
+    clk.setTime(0, minute, hour, 1, 1, 1, 0);
     alarmTime.h = 20;
     alarmTime.m = 20;
     
@@ -136,3 +145,11 @@ void loop() {
         ls.stopTone();
     }
 }
+
+void get2Digits(char * arrayFrom, char * arrayTo, int startIndex)
+{
+    *arrayTo       = arrayFrom[startIndex];
+    *(arrayTo + 1) = arrayFrom[startIndex + 1];
+    *(arrayTo + 2) = '\0';
+}
+

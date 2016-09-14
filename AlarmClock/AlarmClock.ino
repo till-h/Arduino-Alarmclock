@@ -8,10 +8,10 @@
 
 /*  Includes
  *  
- *  Including all libraries that are anywhere used inside the     
+ *  Including all libraries that are anywhere used inside the
  *  project is necessary here if using the Arduino IDE for
  *  making the executable, because its linker links only
- *  files that are included somewhere within the this file.
+ *  files that are included somewhere within this file.
  */
 #include "Wire.h"
 #include "Encoder.h"
@@ -25,21 +25,21 @@
 ///////////////////
 
 // State machine
-enum status {displayCurrentTime, displayAlarmTime, toggleAlarm};
-status currentStatus = displayCurrentTime;
-bool alarmStatus = false;
+enum aStatus {displayCurrentTime, displayAlarmTime, toggleAlarm};
+aStatus status = displayCurrentTime;
+bool alarmActive = false;
 
 // Clock
 DS3231 clk;
 int lastEventTime = -1;
 
-struct someTime
+struct aTime
 {
     uint8_t h = 0; // hours
     uint8_t m = 0; // minutes
 };
 
-someTime alarmTime;
+aTime alarmTime;
 
 // To hold the actual date
 byte currentSecond,
@@ -70,7 +70,7 @@ int buttonTimeout = 50000;
 void buttonDepressed()
 {
 lastPress = micros();
-alarmStatus = !alarmStatus;
+alarmActive = !alarmActive;
 }
 
 Loudspeaker ls;
@@ -114,17 +114,15 @@ void loop() {
         currentStatus = displayAlarmTime;
     }
     // Continue to display alarm time for a while after the last rotation
-    else if (timeNow - timeLast < 1000000)
+    else if (now - lastRotation < 1000000)
     {
-        currentStatus = displayAlarmTime;
+        status = displayAlarmTime;
     }
-
-    if (micros() - lastPress < 1000000)
+    else if (now - lastPress < 1000000)
     {
-        currentStatus = toggleAlarm;
+        status = toggleAlarm;
     }
-    
-    switch(currentStatus)
+    switch(status)
     {
         case displayCurrentTime:        
             Serial.println("Case: displayCurrentTime"); 
@@ -143,7 +141,7 @@ void loop() {
             break;        
         case toggleAlarm:
             Serial.println("Case: toggleAlarm");
-            matrix.displayAlarm(alarmStatus);
+            matrix.displayAlarm(alarmActive);
         
     }
 

@@ -44,6 +44,8 @@ class DS3231
                       byte *dayOfMonth,
                       byte *month,
                       byte *year);
+        void readHourMinute(byte *minute,
+                            byte *hour);
         void printTime();
     private:
         byte decToBcd(byte val);

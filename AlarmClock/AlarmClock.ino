@@ -28,13 +28,18 @@ void get2Digits(char * arrayFrom, char * arrayTo, int startIndex);
 ///////////////////
 
 // State machine
-enum aStatus {displayCurrentTime, displayAlarmTime, toggleAlarm};
+enum aStatus
+{
+    displayCurrentTime,
+    displayAlarmTime,
+    toggleAlarm
+};
+
 aStatus status = displayCurrentTime;
-bool alarmActive = false;
+bool alarmIsActive = false;
 
 // Clock
 DS3231 clk;
-int lastEventTime = -1;
 
 struct aTime
 {
@@ -42,22 +47,12 @@ struct aTime
     uint8_t m = 0; // minutes
 };
 
-aTime alarmTime;
-
-// To hold the actual date
-byte currentSecond,
-     currentMinute,
-     currentHour,
-     currentDayOfWeek,
-     currentDayOfMonth,
-     currentMonth,
-     currentYear;
-byte lastMinute;
+aTime actualTime, alarmTime;
 
 // Dot matrix display
 DotMatrix matrix;
 
-// Rotary encoder
+// For the control button (rotary encoder)
 RotaryDial dial(2, 5);
 unsigned int lastRotation = 0;
 unsigned int lastPress = 0;
@@ -66,7 +61,7 @@ unsigned int lastPress = 0;
 void buttonDepressed()
 {
 lastPress = micros();
-alarmActive = !alarmActive;
+alarmIsActive = !alarmIsActive;
 }
 
 Loudspeaker ls;
@@ -104,6 +99,7 @@ void loop() {
         status = displayAlarmTime;
         lastRotation = now;
     }
+
     // Continue to display alarm time for a while after the last rotation
     else if (now - lastRotation < 1000000)
     {
@@ -113,18 +109,13 @@ void loop() {
     {
         status = toggleAlarm;
     }
+    
     switch(status)
     {
         case displayCurrentTime:        
             Serial.println("Case: displayCurrentTime"); 
-            clk.readTime(&currentSecond,
-                         &currentMinute,
-                         &currentHour,
-                         &currentDayOfWeek,
-                         &currentDayOfMonth,
-                         &currentMonth,
-                         &currentYear);
-            matrix.displayTime(currentHour, currentMinute);
+            clk.readHourMinute(&actualTime.m, &actualTime.h);
+            matrix.displayTime(actualTime.h, actualTime.m);
             break;
         case displayAlarmTime:
             Serial.println("Case: displayAlarmTime");
@@ -132,17 +123,17 @@ void loop() {
             break;        
         case toggleAlarm:
             Serial.println("Case: toggleAlarm");
-            matrix.displayAlarm(alarmActive);
+            matrix.displayAlarm(alarmIsActive);
         
     }
 
-    if ((alarmTime.h == currentHour) && (alarmTime.m == currentMinute))
+    if ((alarmTime.h == actualTime.h) && (alarmTime.m == actualTime.m) && alarmIsActive)
     {
-        ls.startTone(lsFreq);
+        ls.ring(lsFreq);
     }
     else
     {
-        ls.stopTone();
+        ls.beQuiet();
     }
 }
 

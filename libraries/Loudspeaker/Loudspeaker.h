@@ -21,8 +21,8 @@ class Loudspeaker
         Loudspeaker();
         Loudspeaker(uint8_t pin);
         void setPin(uint8_t pin);
-        void startTone(uint16_t freq);
-        void stopTone();
+        void ring(uint16_t freq);
+        void beQuiet();
     private:
         uint8_t _pin;
         bool _set;

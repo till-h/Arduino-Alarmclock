@@ -81,6 +81,23 @@ void DS3231::readTime(byte *second,
     *year = bcdToDec(Wire.read());
 }
 
+void DS3231::readHourMinute(byte *minute,
+                       byte *hour);
+{
+  byte second,
+       dayOfWeek,
+       dayOfMonth,
+       month,
+       year;
+  readTime(&second,
+           &minute,
+           &hour,
+           &dayOfWeek,
+           &dayOfMonth,
+           &month,
+           &year);
+}
+
 void DS3231::printTime()
 {
     byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;

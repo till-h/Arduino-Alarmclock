@@ -17,7 +17,7 @@ class RotaryDial
 {
 public:
     RotaryDial(uint8_t pin1, uint8_t pin2);
-    int16_t getRotation();
+    int16_t       getRotation();
 
 private:
     Encoder       *enc;
@@ -28,8 +28,8 @@ private:
     unsigned long now = 0;
     unsigned long then = 0;
     unsigned long timeDelta = 0;
-    unsigned long fastRotThres = 2*100000; // in us
-    int buttonTimeout = 50000;
+    unsigned long fastRotThres = 200000; // in us
+    int           buttonTimeout = 50000;
 };
 
 #endif

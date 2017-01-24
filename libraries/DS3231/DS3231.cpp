@@ -82,7 +82,7 @@ void DS3231::readTime(byte *second,
 }
 
 void DS3231::readHourMinute(byte *minute,
-                       byte *hour);
+                       byte *hour)
 {
   byte second,
        dayOfWeek,
@@ -90,8 +90,8 @@ void DS3231::readHourMinute(byte *minute,
        month,
        year;
   readTime(&second,
-           &minute,
-           &hour,
+           minute,
+           hour,
            &dayOfWeek,
            &dayOfMonth,
            &month,

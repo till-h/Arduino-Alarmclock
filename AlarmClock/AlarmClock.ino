@@ -21,18 +21,30 @@
 #include "DotMatrix.h"
 #include "DS3231.h"
 
+//////////
+// Pins //
+//////////
+#define BEEP  9
+#define ENC1  3
+#define ENC2  6
+#define PUSH  2
+#define CLK   13
+#define CS    A0
+#define DIN   A1
+
+
 void get2Digits(char * arrayFrom, char * arrayTo, int startIndex);
 
-///////////////////
-// Global variables
-///////////////////
+//////////////////////
+// Global variables //
+//////////////////////
 
 // State machine
 enum aStatus
 {
     displayCurrentTime,
     displayAlarmTime,
-    toggleAlarm
+    displayAlarmStatus
 };
 
 aStatus status = displayCurrentTime;
@@ -53,7 +65,7 @@ aTime actualTime, alarmTime;
 DotMatrix matrix;
 
 // For the control button (rotary encoder)
-RotaryDial dial(2, 5);
+RotaryDial dial(ENC1, ENC2);
 unsigned int lastRotation = 0;
 unsigned int lastPress = 0;
 
@@ -70,22 +82,24 @@ uint16_t lsFreq = 10000;
 void setup() {
     Serial.begin(9600);
     Serial.println("Alarm Clock v0.01");
-    // Program clock with time of compilation
+
+    // Program clock with system time at compilation
     char h[3];
     char m[3];
     get2Digits(__TIME__, h, 0);
     get2Digits(__TIME__, m, 3);
-    int hour = atoi(h);;
-    int minute = atoi(m);;
-
+    int hour = atoi(h);
+    int minute = atoi(m);
     clk.setTime(0, minute, hour, 1, 1, 1, 0);
-    alarmTime.h = 20;
-    alarmTime.m = 20;
+    // Default alarm time 7am
+    alarmTime.h = 7;
+    alarmTime.m = 0;
+
+    matrix.setup(DIN, CLK, CS, 3);
     
-    matrix.setup(4, A1, A2, 6);
-    pinMode(3, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(3), buttonDepressed, RISING);
-    ls.setPin(A3);
+    pinMode(PUSH, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(PUSH), buttonDepressed, RISING);
+    ls.setPin(BEEP);
 }
 
 void loop() {
@@ -107,9 +121,9 @@ void loop() {
     }
     else if (now - lastPress < 1000000)
     {
-        status = toggleAlarm;
+        status = displayAlarmStatus;
     }
-    
+
     switch(status)
     {
         case displayCurrentTime:        
@@ -120,9 +134,9 @@ void loop() {
         case displayAlarmTime:
             Serial.println("Case: displayAlarmTime");
             matrix.displayTime(alarmTime.h, alarmTime.m);
-            break;        
-        case toggleAlarm:
-            Serial.println("Case: toggleAlarm");
+            break;
+        case displayAlarmStatus:
+            Serial.println("Case: displayAlarmStatus");
             matrix.displayAlarm(alarmIsActive);
         
     }
@@ -143,4 +157,3 @@ void get2Digits(char * arrayFrom, char * arrayTo, int startIndex)
     *(arrayTo + 1) = arrayFrom[startIndex + 1];
     *(arrayTo + 2) = '\0';
 }
-

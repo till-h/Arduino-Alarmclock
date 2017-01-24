@@ -25,7 +25,6 @@ private:
     LedControl lc;
     uint8_t           last_hour = 100;
     uint8_t           last_minute = 100;
-    unsigned long     last_update;
     static byte       const n[10][5];
     static byte       const clock[9];
     static byte       const onoff[2][15];

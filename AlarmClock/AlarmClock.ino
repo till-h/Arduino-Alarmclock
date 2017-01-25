@@ -20,6 +20,7 @@
 #include "Loudspeaker.h"
 #include "DotMatrix.h"
 #include "DS3231.h"
+#include "string.h"
 
 //////////
 // Pins //
@@ -83,14 +84,19 @@ void setup() {
     Serial.begin(9600);
     Serial.println("Alarm Clock v0.01");
 
-    // Program clock with system time at compilation
+    // Set clock with system time at compilation
+    char t[9];
     char h[3];
     char m[3];
-    get2Digits(__TIME__, h, 0);
-    get2Digits(__TIME__, m, 3);
+    char s[3];
+    strcpy(t, __TIME__);
+    get2Digits(t, h, 0);
+    get2Digits(t, m, 3);
+    get2Digits(t, s, 6);
     int hour = atoi(h);
     int minute = atoi(m);
-    clk.setTime(0, minute, hour, 1, 1, 1, 0);
+    int second = atoi(s);
+    clk.setTime(second, minute, hour, 1, 1, 1, 0);
     // Default alarm time 7am
     alarmTime.h = 7;
     alarmTime.m = 0;

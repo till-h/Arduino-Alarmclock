@@ -3,7 +3,7 @@
 
 RotaryDial::RotaryDial(uint8_t pin1, uint8_t pin2)
 {
-    *enc = Encoder(pin1, pin2);
+    enc = new Encoder(pin1, pin2);
 }
 
 int16_t RotaryDial::getRotation()

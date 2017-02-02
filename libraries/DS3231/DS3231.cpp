@@ -20,13 +20,13 @@ DS3231::DS3231()
     //setTime(0,1,1,1,1,1,0); // some default datum
 }
 
-DS3231::DS3231(byte second,
-               byte minute,
-               byte hour,
-               byte dayOfWeek,
-               byte dayOfMonth,
-               byte month,
-               byte year)
+DS3231::DS3231(uint8_t second,
+               uint8_t minute,
+               uint8_t hour,
+               uint8_t dayOfWeek,
+               uint8_t dayOfMonth,
+               uint8_t month,
+               uint8_t year)
 {
     Wire.begin();
     Serial.begin(SERIAL_BAUD_RATE);
@@ -39,13 +39,13 @@ DS3231::DS3231(byte second,
             year);
 }
 
-void DS3231::setTime(byte second,
-                byte minute,
-                byte hour,
-                byte dayOfWeek,
-                byte dayOfMonth,
-                byte month,
-                byte year)
+void DS3231::setTime(uint8_t second,
+                uint8_t minute,
+                uint8_t hour,
+                uint8_t dayOfWeek,
+                uint8_t dayOfMonth,
+                uint8_t month,
+                uint8_t year)
 {
     Wire.beginTransmission(DS3231_I2C_ADDRESS);
     Wire.write(0); // set next input to start at the seconds register
@@ -59,13 +59,13 @@ void DS3231::setTime(byte second,
     Wire.endTransmission();
 }
 
-void DS3231::readTime(byte *second,
-                 byte *minute,
-                 byte *hour,
-                 byte *dayOfWeek,
-                 byte *dayOfMonth,
-                 byte *month,
-                 byte *year)
+void DS3231::readTime(uint8_t *second,
+                 uint8_t *minute,
+                 uint8_t *hour,
+                 uint8_t *dayOfWeek,
+                 uint8_t *dayOfMonth,
+                 uint8_t *month,
+                 uint8_t *year)
 {
     Wire.beginTransmission(DS3231_I2C_ADDRESS);
     Wire.write(0); // set DS3231 register pointer to 00h
@@ -81,10 +81,10 @@ void DS3231::readTime(byte *second,
     *year = bcdToDec(Wire.read());
 }
 
-void DS3231::readHourMinute(byte *minute,
-                       byte *hour)
+void DS3231::readHourMinute(uint8_t *minute,
+                       uint8_t *hour)
 {
-  byte second,
+  uint8_t second,
        dayOfWeek,
        dayOfMonth,
        month,
@@ -100,7 +100,7 @@ void DS3231::readHourMinute(byte *minute,
 
 void DS3231::printTime()
 {
-    byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
+    uint8_t second, minute, hour, dayOfWeek, dayOfMonth, month, year;
     // retrieve data from DS3231
     readTime(&second,
                    &minute,
@@ -111,7 +111,7 @@ void DS3231::printTime()
                    &year);
     // send it to the serial monitor
     Serial.print(hour, DEC);
-    // convert the byte variable to a decimal number when displayed
+    // convert the uint8_t variable to a decimal number when displayed
     Serial.print(":");
     if (minute<10)
     {
@@ -157,12 +157,12 @@ void DS3231::printTime()
     }
 }
 
-byte DS3231::decToBcd(byte val)
+uint8_t DS3231::decToBcd(uint8_t val)
 {
   return( (val/10*16) + (val%10) );
 }
 
-byte DS3231::bcdToDec(byte val)
+uint8_t DS3231::bcdToDec(uint8_t val)
 {
   return( (val/16*10) + (val%16) );
 }

@@ -23,33 +23,33 @@ class DS3231
 {
     public:
         DS3231();
-        DS3231(byte second,
-               byte minute,
-               byte hour,
-               byte dayOfWeek,
-               byte dayOfMonth,
-               byte month,
-               byte year);
-        void setTime(byte second,
-                     byte minute,
-                     byte hour,
-                     byte dayOfWeek,
-                     byte dayOfMonth,
-                     byte month,
-                     byte year);
-        void readTime(byte *second,
-                      byte *minute,
-                      byte *hour,
-                      byte *dayOfWeek,
-                      byte *dayOfMonth,
-                      byte *month,
-                      byte *year);
-        void readHourMinute(byte *minute,
-                            byte *hour);
+        DS3231(uint8_t second,
+               uint8_t minute,
+               uint8_t hour,
+               uint8_t dayOfWeek,
+               uint8_t dayOfMonth,
+               uint8_t month,
+               uint8_t year);
+        void setTime(uint8_t second,
+                     uint8_t minute,
+                     uint8_t hour,
+                     uint8_t dayOfWeek,
+                     uint8_t dayOfMonth,
+                     uint8_t month,
+                     uint8_t year);
+        void readTime(uint8_t *second,
+                      uint8_t *minute,
+                      uint8_t *hour,
+                      uint8_t *dayOfWeek,
+                      uint8_t *dayOfMonth,
+                      uint8_t *month,
+                      uint8_t *year);
+        void readHourMinute(uint8_t *minute,
+                            uint8_t *hour);
         void printTime();
     private:
-        byte decToBcd(byte val);
-        byte bcdToDec(byte val);
+        uint8_t decToBcd(uint8_t val);
+        uint8_t bcdToDec(uint8_t val);
 
 };
 

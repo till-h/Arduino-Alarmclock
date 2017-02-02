@@ -33,8 +33,13 @@
 #define CS    A0
 #define DIN   A1
 
+#define SERIAL_BAUD_RATE 9600
 
-void get2Digits(char * arrayFrom, char * arrayTo, int startIndex);
+// default alarm time
+#define DEFAULT_ALARM_H 7
+#define DEFAULT_ALARM_M 0
+
+void get2Digits(char * arrayFrom, char * arrayTo, uint8_t startIndex);
 
 //////////////////////
 // Global variables //
@@ -67,20 +72,20 @@ DotMatrix matrix;
 
 // For the control button (rotary encoder)
 RotaryDial dial(ENC1, ENC2);
-unsigned int lastRotation = 0;
-unsigned int lastPress = 0;
+uint32_t lastRotation = 0;
+uint32_t lastPress = 0;
 
 // Encoder button callback function
 void buttonDepressed()
 {
-lastPress = micros();
-alarmIsActive = !alarmIsActive;
+    lastPress = micros();
+    alarmIsActive = !alarmIsActive;
 }
 
 Loudspeaker ls;
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(SERIAL_BAUD_RATE);
     Serial.println("Alarm Clock v0.01");
 
     // Set clock with system time at compilation
@@ -97,8 +102,8 @@ void setup() {
     int second = atoi(s);
     clk.setTime(second, minute, hour, 1, 1, 1, 0);
     // Default alarm time 7am
-    alarmTime.h = 7;
-    alarmTime.m = 0;
+    alarmTime.h = DEFAULT_ALARM_H;
+    alarmTime.m = DEFAULT_ALARM_M;
 
     matrix.setup(DIN, CLK, CS, 3);
     
@@ -110,7 +115,7 @@ void setup() {
 void loop() {
     status = displayCurrentTime;
     int rotation = dial.getRotation();
-    unsigned long now = micros();
+    uint32_t now = micros();
     if (rotation != 0) {
         if (alarmTime.m + rotation > 59) { alarmTime.h = (alarmTime.h + 1) % 24; }
         if (alarmTime.m + rotation <  0) { alarmTime.h = (alarmTime.h - 1 + 24) % 24; }
@@ -157,7 +162,7 @@ void loop() {
     }
 }
 
-void get2Digits(char * arrayFrom, char * arrayTo, int startIndex)
+void get2Digits(char * arrayFrom, char * arrayTo, uint8_t startIndex)
 {
     *arrayTo       = arrayFrom[startIndex];
     *(arrayTo + 1) = arrayFrom[startIndex + 1];

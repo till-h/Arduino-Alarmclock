@@ -23,12 +23,12 @@ private:
     Encoder       *enc;
     uint8_t       pin1 = 0;
     uint8_t       pin2 = 0;
-    long          currentPosition = 0;
-    long          lastPosition = 0;
-    unsigned long now = 0;
-    unsigned long then = 0;
-    unsigned long timeDelta = 0;
-    unsigned long fastRotThres = 200000; // in us
+    int32_t       currentPosition = 0;
+    int32_t       lastPosition = 0;
+    uint32_t      now = 0;
+    uint32_t      then = 0;
+    uint32_t      timeDelta = 0;
+    uint32_t      fastRotThres = 200000; // in us
     int           buttonTimeout = 50000;
 };
 

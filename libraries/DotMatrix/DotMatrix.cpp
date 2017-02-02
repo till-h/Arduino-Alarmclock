@@ -14,7 +14,7 @@
 
 DotMatrix::DotMatrix() {}
 
-void DotMatrix::setup(int dta, int clk, int cs, int num)
+void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num)
 {
     lc.setup(dta, clk, cs, num);
     for(int8_t i = 0; i < lc.getDeviceCount(); i++)
@@ -59,7 +59,7 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
 
 void DotMatrix::displayAlarm(bool status)
 {
-    if (int(status) - 2 != last_hour)
+    if (int8_t(status) - 2 != last_hour)
     {
         uint8_t col = 0;
         // display clock symbol
@@ -67,14 +67,14 @@ void DotMatrix::displayAlarm(bool status)
             setColumn(col, clock[col]);
         // display on / off
         for (; col < 24; col++)
-            setColumn(col, onoff[int(status)][col - 9]);
+            setColumn(col, onoff[int8_t(status)][col - 9]);
         // mark which alarm was last set to avoid
         // needlessly updating the display if it
         // currently displays the correct status
         // use bogus hours to mark alarm status display:
         // if status = true, last hour = -1;
         // if status = false, last hour = -2
-        last_hour = int(status) - 2;
+        last_hour = int8_t(status) - 2;
     }
 }
 

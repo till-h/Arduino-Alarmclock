@@ -109,7 +109,7 @@ void setup() {
     
     pinMode(PUSH, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PUSH), buttonDepressed, FALLING);
-    ls.initialise(BEEP, 1000);
+    ls.initialise(BEEP);
 }
 
 void loop() {

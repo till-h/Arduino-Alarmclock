@@ -52,6 +52,13 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
             setColumn(col, n[m0][col - 13]);
         for (uint8_t col = 19; col < 24; col++)
             setColumn(col, n[m1][col - 19]);
+        if (last_hour < 0)
+        {
+            setColumn(5, B00000000);
+            setColumn(11, B00000000);
+            setColumn(12, B00000000);
+            setColumn(18, B00000000);
+        }
     }
     last_hour = hour;
     last_minute = minute;

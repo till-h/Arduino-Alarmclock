@@ -13,22 +13,21 @@
 #include "Loudspeaker.h"
 #include "Arduino.h"
 
-Loudspeaker::Loudspeaker() : _pin(-1), _set(false) {}
+Loudspeaker::Loudspeaker() : _pin(-1), _freq(-1), _set(false) {}
 
-Loudspeaker::Loudspeaker(uint8_t pin) : _pin(pin), _set(false) {}
-
-void Loudspeaker::setPin(uint8_t pin)
+void Loudspeaker::initialise(int8_t pin, int16_t freq)
 {
     _pin = pin;
+    _freq = freq;
 }
 
-void Loudspeaker::ring(uint16_t freq)
+void Loudspeaker::ring()
 {
     if (!_set)
     {
-        tone(_pin, freq);
+        tone(_pin, _freq);
+        _set = true;
     }
-    _set = true;
 }
 
 void Loudspeaker::beQuiet()
@@ -36,6 +35,6 @@ void Loudspeaker::beQuiet()
     if (_set)
     {
         noTone(_pin);
+        _set = false;
     }
-    _set = false;
 }

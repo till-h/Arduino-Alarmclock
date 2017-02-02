@@ -19,12 +19,12 @@ class Loudspeaker
          * Pin is set to -1
          */
         Loudspeaker();
-        Loudspeaker(uint8_t pin);
-        void setPin(uint8_t pin);
-        void ring(uint16_t freq);
+        void initialise(int8_t pin, int16_t freq);
+        void ring();
         void beQuiet();
     private:
-        uint8_t _pin;
+        int8_t _pin;
+        int16_t _freq;
         bool _set;
 };
 

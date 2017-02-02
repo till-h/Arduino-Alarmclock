@@ -78,7 +78,6 @@ alarmIsActive = !alarmIsActive;
 }
 
 Loudspeaker ls;
-uint16_t lsFreq = 10000;
 
 void setup() {
     Serial.begin(9600);
@@ -104,8 +103,8 @@ void setup() {
     matrix.setup(DIN, CLK, CS, 3);
     
     pinMode(PUSH, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(PUSH), buttonDepressed, RISING);
-    ls.setPin(BEEP);
+    attachInterrupt(digitalPinToInterrupt(PUSH), buttonDepressed, FALLING);
+    ls.initialise(BEEP, 1000);
 }
 
 void loop() {
@@ -149,7 +148,8 @@ void loop() {
 
     if ((alarmTime.h == actualTime.h) && (alarmTime.m == actualTime.m) && alarmIsActive)
     {
-        ls.ring(lsFreq);
+      Serial.println("Ring!");
+        ls.ring();
     }
     else
     {

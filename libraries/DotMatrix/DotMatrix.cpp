@@ -33,6 +33,7 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
     uint8_t m0 = minute / 10; // tens of minutes
     uint8_t m1 = minute % 10; // minutes
 
+    // only update if display needs to change
     if (hour != last_hour || minute != last_minute)
     {
         if (h0 != 0) // skip leading zero
@@ -67,7 +68,12 @@ void DotMatrix::displayAlarm(bool status)
         // display on / off
         for (; col < 24; col++)
             setColumn(col, onoff[int(status)][col - 9]);
-        // mark which alarm was last set
+        // mark which alarm was last set to avoid
+        // needlessly updating the display if it
+        // currently displays the correct status
+        // use bogus hours to mark alarm status display:
+        // if status = true, last hour = -1;
+        // if status = false, last hour = -2
         last_hour = int(status) - 2;
     }
 }
@@ -246,23 +252,6 @@ byte const DotMatrix::clock[9] =
 
 byte const DotMatrix::onoff[2][15] =
 {
-    { // ON
-        B00000000,
-        B00011100,
-        B00100010,
-        B01000010,
-        B01000100,
-        B00111000,
-        B00000000,
-        B00000000,
-        B00011110,
-        B01100000,
-        B00011000,
-        B00000110,
-        B01111000,
-        B00000000,
-        B00000000
-    },
     { // OFF
         B00000000,
         B00011100,
@@ -279,6 +268,22 @@ byte const DotMatrix::onoff[2][15] =
         B00111100,
         B01010000,
         B01000000
-
+    },
+    { // ON
+        B00000000,
+        B00011100,
+        B00100010,
+        B01000010,
+        B01000100,
+        B00111000,
+        B00000000,
+        B00000000,
+        B00011110,
+        B01100000,
+        B00011000,
+        B00000110,
+        B01111000,
+        B00000000,
+        B00000000
     }
 };

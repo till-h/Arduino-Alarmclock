@@ -15,18 +15,30 @@
 
 Loudspeaker::Loudspeaker() : _pin(-1), _freq(-1), _set(false) {}
 
-void Loudspeaker::initialise(int8_t pin, int16_t freq)
+void Loudspeaker::initialise(int8_t pin, int16_t freq, uint32_t interval)
 {
     _pin = pin;
     _freq = freq;
+    _interval = interval;
 }
 
 void Loudspeaker::ring()
 {
-    if (!_set)
+    uint32_t now = micros();
+    // change state if _interval microseconds have passed
+    if (now - _lastFlank > _interval)
     {
-        tone(_pin, _freq);
-        _set = true;
+        if (!_set)
+        {
+            tone(_pin, _freq);
+            _set = true;
+        }
+        else
+        {
+            noTone(_pin);
+            _set = false;
+        }
+        _lastFlank = now;
     }
 }
 

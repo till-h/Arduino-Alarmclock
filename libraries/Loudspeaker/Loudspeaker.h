@@ -19,13 +19,15 @@ class Loudspeaker
          * Pin is set to -1
          */
         Loudspeaker();
-        void initialise(int8_t pin, int16_t freq = 31);
+        void initialise(int8_t pin, int16_t freq = 31, uint32_t interval = 1000000);
         void ring();
         void beQuiet();
     private:
         int8_t _pin;
         int16_t _freq;
         bool _set;
+        uint32_t _interval;
+        uint32_t _lastFlank;
 };
 
 #endif // Loudspeaker_h

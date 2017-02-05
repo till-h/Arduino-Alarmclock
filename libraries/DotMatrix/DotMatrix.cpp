@@ -8,20 +8,17 @@
 */
 
 #include <DotMatrix.h>
-// Set font art for numbers
-//#define CALLIGRAPHY
-#define SANS
 
 DotMatrix::DotMatrix() {}
 
-void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num)
+void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num, uint8_t brightness)
 {
     lc.setup(dta, clk, cs, num);
     for(int8_t i = 0; i < lc.getDeviceCount(); i++)
     {
         lc.clearDisplay(i);
         lc.shutdown(i, false);
-        lc.setIntensity(i, 2);
+        lc.setIntensity(i, brightness);
     }
 }
 

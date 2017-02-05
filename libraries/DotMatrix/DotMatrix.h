@@ -13,11 +13,16 @@
 #include "Arduino.h"
 #include "LedControl.h"
 
+// display font for numbers
+// allow to set via preprocessor to save program memory
+// #define CALLIGRAPHY
+#define SANS
+
 class DotMatrix
 {
 public:
     DotMatrix();
-    void setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num);
+    void setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num, uint8_t brightness);
     void displayTime(uint8_t hour, uint8_t minute);
     void displayAlarm(bool status);
 private:

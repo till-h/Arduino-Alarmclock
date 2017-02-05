@@ -105,7 +105,7 @@ void setup() {
     alarmTime.h = DEFAULT_ALARM_H;
     alarmTime.m = DEFAULT_ALARM_M;
 
-    matrix.setup(DIN, CLK, CS, 3);
+    matrix.setup(DIN, CLK, CS, 3, 0);
     
     pinMode(PUSH, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PUSH), buttonDepressed, FALLING);

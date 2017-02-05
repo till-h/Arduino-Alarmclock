@@ -6,15 +6,6 @@
  *  Created by Till Hackler, December 2015
  */
 
-/*  Includes
- *  
- *  Including all libraries that are anywhere used inside the
- *  project is necessary here if using the Arduino IDE for
- *  making the executable, because its linker links only
- *  files that are included somewhere within this file.
- */
-#include "Wire.h"
-#include "Encoder.h"
 #include "RotaryDial.h"
 #include "LedControl.h"
 #include "Loudspeaker.h"

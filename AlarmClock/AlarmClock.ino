@@ -30,8 +30,6 @@
 #define DEFAULT_ALARM_H 7
 #define DEFAULT_ALARM_M 0
 
-void get2Digits(char * arrayFrom, char * arrayTo, uint8_t startIndex);
-
 //////////////////////
 // Global variables //
 //////////////////////
@@ -78,20 +76,7 @@ Loudspeaker ls;
 void setup() {
     Serial.begin(SERIAL_BAUD_RATE);
     Serial.println("Alarm Clock v0.01");
-
-    // Set clock with system time at compilation
-    char t[9];
-    char h[3];
-    char m[3];
-    char s[3];
-    strcpy(t, __TIME__);
-    get2Digits(t, h, 0);
-    get2Digits(t, m, 3);
-    get2Digits(t, s, 6);
-    int hour = atoi(h);
-    int minute = atoi(m);
-    int second = atoi(s);
-    clk.setTime(second, minute, hour, 1, 1, 1, 0);
+    
     // Default alarm time 7am
     alarmTime.h = DEFAULT_ALARM_H;
     alarmTime.m = DEFAULT_ALARM_M;
@@ -151,11 +136,4 @@ void loop() {
     {
         ls.beQuiet();
     }
-}
-
-void get2Digits(char * arrayFrom, char * arrayTo, uint8_t startIndex)
-{
-    *arrayTo       = arrayFrom[startIndex];
-    *(arrayTo + 1) = arrayFrom[startIndex + 1];
-    *(arrayTo + 2) = '\0';
 }

@@ -15,8 +15,8 @@
 
 // display font for numbers
 // allow to set via preprocessor to save program memory
-// #define CALLIGRAPHY
-#define SANS
+#define CALLIGRAPHY
+// #define SANS
 
 class DotMatrix
 {

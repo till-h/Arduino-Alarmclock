@@ -52,8 +52,17 @@ uint32_t lastPress = 0;
 // Encoder button callback
 void buttonDepressed()
 {
-    lastPress = micros();
-    alarmIsActive = !alarmIsActive;
+    int32_t state = digitalRead(PUSH);
+    uint32_t now = micros();
+    if (state == HIGH)
+    {
+        alarmIsActive = !alarmIsActive;
+        lastPress = now;
+    }
+    else if (state == LOW)
+    {
+
+    }
 }
 
 RotaryDial dial(ENC1, ENC2, PUSH, &buttonDepressed);
@@ -91,7 +100,6 @@ void loop() {
         status = displayAlarmTime;
         lastRotation = now;
     }
-
     // Continue to display alarm time for a while after the last rotation
     else if (now - lastRotation < 1000000)
     {

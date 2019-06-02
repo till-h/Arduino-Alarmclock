@@ -7,7 +7,7 @@ RotaryDial::RotaryDial( uint8_t pin1, uint8_t pin2, uint8_t push, void (*pushCal
     enc = new Encoder(pin1, pin2);
     // Push button
     pinMode(push, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(push), pushCallback, FALLING);
+    attachInterrupt(digitalPinToInterrupt(push), pushCallback, CHANGE);
 }
 
 int16_t RotaryDial::getRotation()

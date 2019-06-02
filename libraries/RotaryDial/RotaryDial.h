@@ -16,13 +16,14 @@
 class RotaryDial
 {
 public:
-    RotaryDial(uint8_t pin1, uint8_t pin2);
+    RotaryDial( uint8_t rot1, uint8_t rot2, uint8_t push, void (*pushCallback)() );
     int16_t       getRotation();
 
 private:
     Encoder       *enc;
     uint8_t       pin1 = 0;
     uint8_t       pin2 = 0;
+    uint8_t       push = 0;
     int32_t       currentPosition = 0;
     int32_t       lastPosition = 0;
     uint32_t      now = 0;

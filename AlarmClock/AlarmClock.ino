@@ -48,24 +48,35 @@ DotMatrix matrix;
 // Control button (rotary encoder)
 uint32_t lastRotation = 0;
 uint32_t lastPress = 0;
+uint32_t lastDepress = 0;
 
 // Encoder button callback
-void buttonDepressed()
+void buttonChanged()
 {
     int32_t state = digitalRead(PUSH);
     uint32_t now = micros();
     if (state == HIGH)
     {
-        alarmIsActive = !alarmIsActive;
+        Serial.println("Pressed!");
+        
         lastPress = now;
     }
     else if (state == LOW)
     {
-
+        Serial.println("Depressed!");
+        if (now - lastPress < 1E6)
+        {
+            alarmIsActive = !alarmIsActive;
+        }
+        else
+        {
+            
+        }
+        lastDepress = now;
     }
 }
 
-RotaryDial dial(ENC1, ENC2, PUSH, &buttonDepressed);
+RotaryDial dial(ENC1, ENC2, PUSH, &buttonChanged);
 
 // Change a given time depending on rotary button
 void changeTime(aTime * time, int32_t rotation)
@@ -92,29 +103,32 @@ void setup() {
 
 void loop() {
     status = displayCurrentTime;
-    int32_t rotation = dial.getRotation();
 
+    int32_t rotation = dial.getRotation();
     uint32_t now = micros();
+    // Detect rotation
     if (rotation != 0) {
         changeTime(&alarmTime, rotation);
         status = displayAlarmTime;
         lastRotation = now;
     }
-    // Continue to display alarm time for a while after the last rotation
-    else if (now - lastRotation < 1000000)
+    // Alarm time display timeout
+    else if (now - lastRotation < 1E6)
     {
         status = displayAlarmTime;
     }
-    else if (now - lastPress < 1000000)
+    // Alarm status display timeout
+    else if (now - lastDepress < 1E6)
     {
         status = displayAlarmStatus;
     }
-    //else if (now - lastPress )
+
+    //else if (now - lastDepress )
 
     switch(status)
     {
         case displayCurrentTime:        
-            Serial.println("Case: displayCurrentTime"); 
+            //Serial.println("Case: displayCurrentTime"); 
             clk.readHourMinute(&actualTime.m, &actualTime.h);
             matrix.displayTime(actualTime.h, actualTime.m);
             break;

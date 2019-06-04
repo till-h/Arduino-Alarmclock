@@ -30,6 +30,7 @@ typedef enum aStatus {
 
 aStatus status = displayCurrentTime;
 bool alarmIsActive = false;
+bool setTime = false;
 
 // Clock
 DS3231 clk;
@@ -70,7 +71,7 @@ void buttonChanged()
         }
         else
         {
-            
+            setTime = true;
         }
         lastDepress = now;
     }
@@ -122,8 +123,12 @@ void loop() {
     {
         status = displayAlarmStatus;
     }
+    
+    if (setTime)
+    {
+        
+    }
 
-    //else if (now - lastDepress )
 
     switch(status)
     {

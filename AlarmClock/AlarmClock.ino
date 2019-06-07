@@ -24,13 +24,11 @@ typedef enum aStatus {
     displayCurrentTime,
     displayAlarmTime,
     displayAlarmStatus,
-    displaySet,
     displaySetTime
 } aStatus; // make aStatus available inside common namespace
 
 aStatus status = displayCurrentTime;
 bool alarmIsActive = false;
-bool setTime = false;
 
 // Clock
 DS3231 clk;
@@ -41,7 +39,7 @@ struct aTime
     uint8_t m = 0; // minutes
 };
 
-aTime actualTime, alarmTime;
+aTime currentTime, alarmTime;
 
 // Dot matrix display
 DotMatrix matrix;
@@ -50,6 +48,7 @@ DotMatrix matrix;
 uint32_t lastRotation = 0;
 uint32_t lastPress = 0;
 uint32_t lastDepress = 0;
+uint32_t lastSetTime = 0;
 
 // Encoder button callback
 void buttonChanged()
@@ -71,7 +70,7 @@ void buttonChanged()
         }
         else
         {
-            setTime = true;
+            lastSetTime = now;
         }
         lastDepress = now;
     }
@@ -80,11 +79,13 @@ void buttonChanged()
 RotaryDial dial(ENC1, ENC2, PUSH, &buttonChanged);
 
 // Change a given time depending on rotary button
-void changeTime(aTime * time, int32_t rotation)
+void changeTime(aTime time, int32_t rotation)
 {
-    if ((time->m + rotation) > 59) { time->h = (time->h + 1) % 24; }
-    if ((time->m + rotation) <  0) { time->h = (time->h - 1 + 24) % 24; }
-    time->m = (time->m + rotation + 60) % 60;
+    aTime newTime;
+    if ((time.m + rotation) > 59) { newTime.h = (time.h + 1) % 24; }
+    if ((time.m + rotation) <  0) { newTime.h = (time.h - 1 + 24) % 24; }
+    newTime.m = (time.m + rotation + 60) % 60;
+    return newTime;
 }
 
 Loudspeaker ls;
@@ -108,9 +109,15 @@ void loop() {
     int32_t rotation = dial.getRotation();
     uint32_t now = micros();
     // Detect rotation
-    if (rotation != 0) {
-        changeTime(&alarmTime, rotation);
+    if (rotation != 0 && now - lastSetTime >= 5E6) {
+        alarmTime = changeTime(alarmTime, rotation);
         status = displayAlarmTime;
+        lastRotation = now;
+    }
+    else if (rotation != 0 && now - lastSetTime < 5E6)
+    {
+        currentTime = changeTime(currentTime, rotation);
+        status = displaySetTime;
         lastRotation = now;
     }
     // Alarm time display timeout
@@ -124,18 +131,15 @@ void loop() {
         status = displayAlarmStatus;
     }
     
-    if (setTime)
-    {
-        
-    }
+
 
 
     switch(status)
     {
         case displayCurrentTime:        
             //Serial.println("Case: displayCurrentTime"); 
-            clk.readHourMinute(&actualTime.m, &actualTime.h);
-            matrix.displayTime(actualTime.h, actualTime.m);
+            clk.readHourMinute(&currentTime.m, &currentTime.h);
+            matrix.displayTime(currentTime.h, currentTime.m);
             break;
         case displayAlarmTime:
             Serial.println("Case: displayAlarmTime");
@@ -145,16 +149,12 @@ void loop() {
             Serial.println("Case: displayAlarmStatus");
             matrix.displayAlarm(alarmIsActive);
             break;
-        case displaySet:
-            Serial.println("Case: displaySet");
-            //matrix.displaySet();
-            break;
         case displaySetTime:
             Serial.println("Case: displaySetTime");
             //matrix.displaySetTime();
     }
 
-    if ((alarmTime.h == actualTime.h) && (alarmTime.m == actualTime.m) && alarmIsActive)
+    if ((alarmTime.h == currentTime.h) && (alarmTime.m == currentTime.m) && alarmIsActive)
     {
       Serial.println("Ring!");
         ls.ring();

@@ -79,7 +79,7 @@ void buttonChanged()
 RotaryDial dial(ENC1, ENC2, PUSH, &buttonChanged);
 
 // Change a given time depending on rotary button
-void changeTime(aTime time, int32_t rotation)
+aTime changeTime(aTime time, int32_t rotation)
 {
     aTime newTime;
     if ((time.m + rotation) > 59) { newTime.h = (time.h + 1) % 24; }
@@ -108,17 +108,25 @@ void loop() {
 
     int32_t rotation = dial.getRotation();
     uint32_t now = micros();
-    // Detect rotation
-    if (rotation != 0 && now - lastSetTime >= 5E6) {
+    // Rotation and we are setting the alarm time
+    if (rotation != 0 && now - lastSetTime >= 3E6) {
         alarmTime = changeTime(alarmTime, rotation);
         status = displayAlarmTime;
         lastRotation = now;
     }
-    else if (rotation != 0 && now - lastSetTime < 5E6)
+    // Rotation and we are setting the current time
+    else if (rotation != 0 && now - lastSetTime < 3E6)
     {
         currentTime = changeTime(currentTime, rotation);
+        clk.setTime(0, currentTime.m, currentTime.h, 0, 1, 1, 0);
         status = displaySetTime;
         lastRotation = now;
+        lastSetTime = now; // renew displaySetTime mode
+    }
+    // We are setting the current time
+    else if (now - lastSetTime < 3E6)
+    {
+        status = displaySetTime;
     }
     // Alarm time display timeout
     else if (now - lastRotation < 1E6)
@@ -130,9 +138,6 @@ void loop() {
     {
         status = displayAlarmStatus;
     }
-    
-
-
 
     switch(status)
     {
@@ -151,7 +156,7 @@ void loop() {
             break;
         case displaySetTime:
             Serial.println("Case: displaySetTime");
-            //matrix.displaySetTime();
+            matrix.displaySetTime(currentTime.h, currentTime.m);
     }
 
     if ((alarmTime.h == currentTime.h) && (alarmTime.m == currentTime.m) && alarmIsActive)

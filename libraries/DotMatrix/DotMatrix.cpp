@@ -22,8 +22,15 @@ void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num, uint8_t
     }
 }
 
-void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
+void DotMatrix::displayTime(uint8_t hour, uint8_t minute, bool block)
 {
+    // set font
+    byte const (*n)[5] = calligraphicFont;
+    if (block == true)
+    {
+        n = blockFont;
+    }
+
     // extract digits
     uint8_t h0 = hour / 10; // tens of hours
     uint8_t h1 = hour % 10; // hours
@@ -61,6 +68,11 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
     last_minute = minute;
 }
 
+void DotMatrix::displaySetTime(uint8_t hour, uint8_t minute)
+{
+    displayTime(hour, minute, true);
+}
+
 void DotMatrix::displayAlarm(bool status)
 {
     if (int8_t(status) - 2 != last_hour)
@@ -90,8 +102,7 @@ void DotMatrix::setColumn(uint8_t col, byte value)
     lc.setColumn(col / 8, col % 8, value);
 }
 
-#ifdef CALLIGRAPHY
-byte const DotMatrix::n[10][5] =
+byte const DotMatrix::calligraphicFont[10][5] =
 {
     { // 0
         B00011111,
@@ -169,9 +180,8 @@ byte const DotMatrix::n[10][5] =
            B01100000
     }
 };
-#endif
-#ifdef SANS
-byte const DotMatrix::n[10][5] =
+
+byte const DotMatrix::blockFont[10][5] =
 {
     { // 0
         B00000000,
@@ -244,7 +254,6 @@ byte const DotMatrix::n[10][5] =
         B00000000
     }
 };
-#endif
 
 byte const DotMatrix::clock[9] =
 {

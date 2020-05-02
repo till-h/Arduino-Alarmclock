@@ -70,11 +70,13 @@ Loudspeaker ls;
 
 void setup() {
     Serial.begin(SERIAL_BAUD_RATE);
-    Serial.println("Alarm Clock v0.01");
+    Serial.println("Alarm Clock v0.1");
+    Serial.println("Alarm time set to:");
+    clk.printAlarmTime();
     
-    // Default alarm time 7am
-    alarmTime.h = DEFAULT_ALARM_H;
-    alarmTime.m = DEFAULT_ALARM_M;
+    // Read in alarm time
+    uint8_t dummyVar = 0;
+    clk.readAlarmTime(&dummyVar, &alarmTime.m, &alarmTime.h, &dummyVar, &dummyVar, &dummyVar, &dummyVar);
 
     matrix.setup(DIN, CLK, CS, 3, 0);
     
@@ -101,7 +103,11 @@ void loop() {
     {
         status = displayAlarmStatus;
     }
-    //else if (now - lastPress )
+    else
+    {
+        // Persist alarm time on clock chip - stored time survives power cuts
+        clk.setAlarmTime(0, alarmTime.m, alarmTime.h, 0, 0, 0, 0);
+    }
 
     switch(status)
     {

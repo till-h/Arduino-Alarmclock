@@ -275,5 +275,7 @@ void DS3231::timeToSerial(uint8_t second,
     case 7:
         Serial.println("Saturday");
         break;
+    default:
+        Serial.println("N/A");
     }
 }

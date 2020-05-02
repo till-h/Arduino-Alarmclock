@@ -62,6 +62,7 @@ class DS3231
                            uint8_t *year);
         void readHourMinute(uint8_t *minute,
                             uint8_t *hour);
+        // TODO return char and length instead of printing inside function
         void printTime();
         void printAlarmTime();
     private:

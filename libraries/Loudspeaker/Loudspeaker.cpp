@@ -11,7 +11,6 @@
 
 
 #include "Loudspeaker.h"
-#include "Arduino.h"
 
 Loudspeaker::Loudspeaker() : _pin(-1), _freq(-1), _set(false) {}
 

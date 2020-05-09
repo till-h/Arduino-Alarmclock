@@ -6,6 +6,7 @@
  *  Created by Till Hackler, December 2015
  */
 
+#include "ClockUtil.h"
 #include "RotaryDial.h"
 #include "LedControl.h"
 #include "Loudspeaker.h"
@@ -13,7 +14,7 @@
 #include "DS3231.h"
 #include "string.h"
 
-#include "AlarmClockConfig.h"
+#include "ClockConfig.h"
 
 //////////////////////
 // Global variables //
@@ -34,12 +35,6 @@ bool alarmIsActive = false;
 // Clock
 DS3231 clk;
 
-struct aTime
-{
-    uint8_t h = 0; // hours
-    uint8_t m = 0; // minutes
-};
-
 aTime actualTime, alarmTime;
 
 // Dot matrix display
@@ -58,14 +53,6 @@ void buttonDepressed()
 
 RotaryDial dial(ENC1, ENC2, PUSH, &buttonDepressed);
 
-// Change a given time depending on rotary button
-void changeTime(aTime * time, int32_t rotation)
-{
-    if ((time->m + rotation) > 59) { time->h = (time->h + 1) % 24; }
-    if ((time->m + rotation) <  0) { time->h = (time->h - 1 + 24) % 24; }
-    time->m = (time->m + rotation + 60) % 60;
-}
-
 Loudspeaker ls;
 
 void setup() {
@@ -76,7 +63,7 @@ void setup() {
     
     // Read in alarm time
     uint8_t dummyVar = 0;
-    clk.readAlarmTime(&dummyVar, &alarmTime.m, &alarmTime.h, &dummyVar, &dummyVar, &dummyVar, &dummyVar);
+    clk.readAlarmTime(&alarmTime);
 
     matrix.setup(DIN, CLK, CS, 3, 0);
     
@@ -106,14 +93,14 @@ void loop() {
     else
     {
         // Persist alarm time on clock chip - stored time survives power cuts
-        clk.setAlarmTime(0, alarmTime.m, alarmTime.h, 0, 0, 0, 0);
+        clk.setAlarmTime(alarmTime);
     }
 
     switch(status)
     {
         case displayCurrentTime:        
             Serial.println("Case: displayCurrentTime"); 
-            clk.readHourMinute(&actualTime.m, &actualTime.h);
+            clk.readTime(&actualTime);
             matrix.displayTime(actualTime.h, actualTime.m);
             break;
         case displayAlarmTime:

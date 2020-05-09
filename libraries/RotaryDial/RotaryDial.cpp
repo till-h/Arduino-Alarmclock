@@ -1,4 +1,3 @@
-#include "Arduino.h"
 #include "RotaryDial.h"
 // Constructor: rot1, rot2 are rotation pins, push is pin for push button, pushCallback is called when push is FALLING
 RotaryDial::RotaryDial( uint8_t pin1, uint8_t pin2, uint8_t push, void (*pushCallback)() )

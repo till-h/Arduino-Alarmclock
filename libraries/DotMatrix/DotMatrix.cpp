@@ -11,7 +11,8 @@
 
 DotMatrix::DotMatrix() {}
 
-void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num, uint8_t brightness)
+void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs,
+                      uint8_t num, uint8_t brightness, uint32_t interval)
 {
     lc.setup(dta, clk, cs, num);
     for(int8_t i = 0; i < lc.getDeviceCount(); i++)
@@ -20,9 +21,11 @@ void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num, uint8_t
         lc.shutdown(i, false);
         lc.setIntensity(i, brightness);
     }
+    _interval = interval;
+    _showing = false;
 }
 
-void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
+void DotMatrix::displayTime(uint8_t hour, uint8_t minute, bool force_update)
 {
     // extract digits
     uint8_t h0 = hour / 10; // tens of hours
@@ -31,7 +34,7 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
     uint8_t m1 = minute % 10; // minutes
 
     // only update if display needs to change
-    if (hour != last_hour || minute != last_minute)
+    if (hour != last_hour || minute != last_minute || force_update)
     {
         if (h0 != 0) // skip leading zero
         {
@@ -61,6 +64,26 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute)
     last_minute = minute;
 }
 
+void DotMatrix::blinkTime(uint8_t hour, uint8_t minute)
+{
+    uint32_t now = micros();
+
+    if (now - _lastFlank > _interval)
+    {
+        if (_showing == false)
+        {
+            displayTime(hour, minute, true);
+            _showing = true;
+        }
+        else
+        {
+            clear();
+            _showing = false;
+        }
+        _lastFlank = now;
+    }
+}
+
 void DotMatrix::displayAlarm(bool status)
 {
     if (int8_t(status) - 2 != last_hour)
@@ -88,6 +111,18 @@ void DotMatrix::displayAlarm(bool status)
 void DotMatrix::setColumn(uint8_t col, byte value)
 {
     lc.setColumn(col / 8, col % 8, value);
+}
+
+void DotMatrix::clear()
+{
+    for (int i = 0; i < lc.getDeviceCount(); i++)
+    {
+        lc.clearDisplay(i);
+    }
+    // for (int i = 0; i < lc.getDeviceCount() * 8; i++)
+    // {
+    //     setColumn(i, B00000000);
+    // }
 }
 
 #ifdef CALLIGRAPHY

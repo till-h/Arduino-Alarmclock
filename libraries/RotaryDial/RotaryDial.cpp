@@ -9,6 +9,7 @@ RotaryDial::RotaryDial( uint8_t pin1, uint8_t pin2, uint8_t push, void (*pushCal
     attachInterrupt(digitalPinToInterrupt(push), pushCallback, FALLING);
 }
 
+// TODO make fast rotation depend on rate of rotation - faster for faster rotation.
 int16_t RotaryDial::getRotation()
 {
     currentPosition = enc->read() / 4;

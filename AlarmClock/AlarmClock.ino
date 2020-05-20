@@ -3,7 +3,7 @@
  *  A simple alarm clock using a DS3231 clock chip and three 8x8
  *  dot matrix displays to show the current time, and set an alarm.
  *  
- *  Created by Till Hackler, December 2015
+ *  Till Hackler, 2015-2020
  */
 
 #include "ClockUtil.h"
@@ -19,15 +19,6 @@
 //////////////////////
 // Global variables //
 //////////////////////
-
-// State machine
-typedef enum aStatus {
-    displayCurrentTime,
-    displayAlarmTime,
-    displayAlarmStatus,
-    displaySet,
-    displaySetTime
-} aStatus; // make aStatus available inside common namespace
 
 aStatus status = displayCurrentTime;
 bool alarmIsActive = false;
@@ -65,7 +56,7 @@ void setup() {
     uint8_t dummyVar = 0;
     clk.readAlarmTime(&alarmTime);
 
-    matrix.setup(DIN, CLK, CS, 3, 0);
+    matrix.setup(DIN, CLK, CS, 3);
     
     ls.initialise(BEEP);
 }
@@ -101,7 +92,7 @@ void loop() {
         case displayCurrentTime:        
             Serial.println("Case: displayCurrentTime"); 
             clk.readTime(&actualTime);
-            matrix.displayTime(actualTime.h, actualTime.m);
+            matrix.blinkTime(actualTime.h, actualTime.m);
             break;
         case displayAlarmTime:
             Serial.println("Case: displayAlarmTime");

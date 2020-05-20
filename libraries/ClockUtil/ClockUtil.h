@@ -16,6 +16,21 @@ struct aTime
     uint8_t yyyy = 1; // year
 };
 
+// State machine
+enum aStatus
+{
+    displayCurrentTime,
+    displayAlarmTime,
+    displayAlarmStatus,
+    displaySet,
+    displaySetTime
+};
+
+struct anEvent
+{
+    aTime time;
+};
+
 // Utility functions
 
 void changeTime(aTime * time, int32_t rotation);

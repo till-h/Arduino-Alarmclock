@@ -16,6 +16,14 @@ struct aTime
     uint8_t yyyy = 1; // year
 };
 
+// System hardware state
+// This is manipulated by the system FSM
+struct hardwareState
+{
+    aTime currentTime, alarmTime;
+    bool alarmIsActive;
+}
+
 // State machine
 enum aStatus
 {
@@ -24,11 +32,6 @@ enum aStatus
     displayAlarmStatus,
     displaySet,
     displaySetTime
-};
-
-struct anEvent
-{
-    aTime time;
 };
 
 // Utility functions

@@ -30,13 +30,13 @@ DS3231::DS3231(aTime time)
 
 void DS3231::setTime(aTime time)
 {
-    DS3231::setTimeAtAddr(DS3231_REG_SECONDS,
+    DS3231::setTimeAtAddr(DS3231_REG_CURRENT_SECONDS,
                           time);
 }
 
 void DS3231::readTime(aTime * time)
 {
-    DS3231::readTimeAtAddr(DS3231_REG_SECONDS,
+    DS3231::readTimeAtAddr(DS3231_REG_CURRENT_SECONDS,
                            time);
 }
 

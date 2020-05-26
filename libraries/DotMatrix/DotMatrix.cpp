@@ -107,6 +107,7 @@ void DotMatrix::displayAlarm(bool status)
 
 /*
  * Use column number to determine which matrix is addressed.
+ * TODO Faster to use setRow, https://playground.arduino.cc/Main/LedControl/
  */
 void DotMatrix::setColumn(uint8_t col, byte value)
 {

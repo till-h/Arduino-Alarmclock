@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
         { // initialise struct
             { // array
                 { // zeroth array element
-                    "showCurrentTime", showCurrentTimeSteady,
+                    "showCurrentTime", showCurrentTimeSteady, // TODO TODO make state names enums, starting with 0 = invalidState
                     {
                         {rotation, "showAlarmTime", emptyTransition},
                         {buttonPress, "toggleAlarm", toggleAlarm},
@@ -95,8 +95,24 @@ int main(int argc, char const *argv[])
             }
         };
     
-    printf("%s", fsm.state[0].name);
-    printf("");
-    
+    // Print out contents of FSM
+    printf("%p\n%p\n%p\n%p\n%p\n%p\n%p\n%p\n",
+        showCurrentTimeSteady,
+        showCurrentTimeFlash,
+        setCurrentTime,
+        toggleAlarm,
+        showAlarmStatus,
+        showAlarmTime,
+        setAlarmTime,
+        emptyTransition);
+
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        printf("%s\t%p\n", fsm.state[i].name, fsm.state[i].churnFunc);
+        for (uint8_t j = 0; j < 5; j++)
+        {
+            printf("\t(%d\t%s\t%p)\n", fsm.state[i].tran[j].event, fsm.state[i].tran[j].newStateName, fsm.state[i].tran[j].transitionFunc);
+        }
+    }
     return 0;
 }

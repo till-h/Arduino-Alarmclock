@@ -14,10 +14,11 @@
 #include "LedControl.h"
 
 // display font for numbers
-// allow to set via preprocessor to save program memory
+// set via preprocessor to save program memory
 #define CALLIGRAPHY
 // #define SANS
 
+// TODO use setRow instead of setColumn. Faster. Will require assembling dot raster before setting.
 class DotMatrix
 {
 public:

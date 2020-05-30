@@ -2,11 +2,20 @@
 
 enum eventType
 {
-    none,
+    noEvent,
     buttonPress,
     longButtonPress,
     timeout,
     rotation
+};
+
+enum softwareState
+{
+    invalidState,
+    showCurrentTime,
+    setCurrentTime,
+    showAlarmTime,
+    toggleAlarm
 };
 
 struct anEvent
@@ -19,13 +28,13 @@ struct anEvent
 struct transitionTuple
 {
     eventType event;
-    char newStateName[50];
+    softwareState newState;
     void (*transitionFunc)(void);
 };
 
 struct FSMState
 {
-    char name[50];
+    softwareState state;
     void (*churnFunc)(void);
     transitionTuple tran[5];
 };
@@ -35,28 +44,28 @@ struct FSM
     FSMState state[4];
 };
 
-void showCurrentTimeSteady()
+void churnShowCurrentTimeSteady()
 {}
 
-void showCurrentTimeFlash()
+void churnShowCurrentTimeFlash()
 {}
 
-void setCurrentTime()
+void tranSetCurrentTime()
 {}
 
-void toggleAlarm()
+void tranToggleAlarm()
 {}
 
-void showAlarmStatus()
+void churnShowAlarmStatus()
 {}
 
-void showAlarmTime()
+void churnShowAlarmTime()
 {}
 
-void setAlarmTime()
+void tranSetAlarmTime()
 {}
 
-void emptyTransition()
+void tranEmptyTransition()
 {}
 
 int main(int argc, char const *argv[])
@@ -65,31 +74,31 @@ int main(int argc, char const *argv[])
         { // initialise struct
             { // array
                 { // zeroth array element
-                    "showCurrentTime", showCurrentTimeSteady, // TODO TODO make state names enums, starting with 0 = invalidState
+                    showCurrentTime, churnShowCurrentTimeSteady,
                     {
-                        {rotation, "showAlarmTime", emptyTransition},
-                        {buttonPress, "toggleAlarm", toggleAlarm},
-                        {longButtonPress, "setCurrentTime", emptyTransition}
+                        {rotation, showAlarmTime, tranEmptyTransition},
+                        {buttonPress, toggleAlarm, tranToggleAlarm},
+                        {longButtonPress, setCurrentTime, tranEmptyTransition}
                     }
                 },
                 {
-                    "toggleAlarm", showAlarmStatus,
+                    toggleAlarm, churnShowAlarmStatus,
                     {
-                        {timeout, "showCurrentTime", emptyTransition}
+                        {timeout, showCurrentTime, tranEmptyTransition}
                     }
                 },
                 {
-                    "showAlarmTime", showAlarmTime,
+                    showAlarmTime, churnShowAlarmTime,
                     {
-                        {timeout, "showCurrentTime", emptyTransition},
-                        {rotation, "showAlarmTime", setAlarmTime}
+                        {timeout, showCurrentTime, tranEmptyTransition},
+                        {rotation, showAlarmTime, tranSetAlarmTime}
                     }
                 },
                 {
-                    "setCurrentTime", showCurrentTimeFlash,
+                    setCurrentTime, churnShowCurrentTimeFlash,
                     {
-                        {timeout, "showCurrentTime", emptyTransition},
-                        {rotation, "setCurrentTime", setCurrentTime}
+                        {timeout, showCurrentTime, tranEmptyTransition},
+                        {rotation, setCurrentTime, tranSetCurrentTime}
                     }
                 }
             }
@@ -97,21 +106,21 @@ int main(int argc, char const *argv[])
     
     // Print out contents of FSM
     printf("%p\n%p\n%p\n%p\n%p\n%p\n%p\n%p\n",
-        showCurrentTimeSteady,
-        showCurrentTimeFlash,
-        setCurrentTime,
-        toggleAlarm,
-        showAlarmStatus,
-        showAlarmTime,
-        setAlarmTime,
-        emptyTransition);
+        churnShowCurrentTimeSteady,
+        churnShowCurrentTimeFlash,
+        tranSetCurrentTime,
+        tranToggleAlarm,
+        churnShowAlarmStatus,
+        churnShowAlarmTime,
+        tranSetAlarmTime,
+        tranEmptyTransition);
 
     for (uint8_t i = 0; i < 4; i++)
     {
-        printf("%s\t%p\n", fsm.state[i].name, fsm.state[i].churnFunc);
+        printf("%d\t%p\n", fsm.state[i].state, fsm.state[i].churnFunc);
         for (uint8_t j = 0; j < 5; j++)
         {
-            printf("\t(%d\t%s\t%p)\n", fsm.state[i].tran[j].event, fsm.state[i].tran[j].newStateName, fsm.state[i].tran[j].transitionFunc);
+            printf("\t(%d\t%d\t%p)\n", fsm.state[i].tran[j].event, fsm.state[i].tran[j].newState, fsm.state[i].tran[j].transitionFunc);
         }
     }
     return 0;

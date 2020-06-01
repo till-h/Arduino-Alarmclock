@@ -3,20 +3,30 @@
 
 #include "ClockUtil.h"
 
+
+// Events
+
 enum eventType
 {
-    none,
+    noEvent,
     buttonPress,
-    buttonLongPress,
+    longButtonPress,
     timeout,
     rotation
 };
 
+// All-purpose structure for events
+// Depending on the event type, subsequent fields are meaningful or not.
+// TODO Could this be handled better by polymorphic structs?
 struct anEvent
 {
     eventType type;
     uint32_t eventTime;
+    uint32_t rotation_ticks;
 };
+
+
+// Event sources
 
 class EventSource
 {
@@ -25,15 +35,22 @@ class EventSource
     private:
 };
 
+// TODO Build FSM internal to Button class to distinguish short/long button press.
+// NOTE: Deciding whether the button was pressed long or short should be handled inside the ButtonSource class,
+// probably inside the poll function (where the duration since the last change is checked).
+// The long/short press differentiation should not seep out into the top-level FSM.
+// If it did, we'd probably require more states there and that's naff.
 class ButtonSource: EventSource
 {
     public:
-        ButtonSource(uint8_t pin);
+        ButtonSource(uint8_t pin, uint32_t longPressThreshold);
         anEvent poll();
     private:
         uint8_t pin;
-        uint32_t lastButtonRelease;
-        bool unservedButtonRelease;
+        uint32_t lastButtonChange;
+        uint32_t longPressThreshold;
+        enum {press, release, none} buttonChange; // button change events (it has just been pressed etc.)
+        enum {pressed, released, initialUndefined} buttonState; // button state (it currently is down etc.)
         void buttonCallback();
 };
 
@@ -49,60 +66,47 @@ class TimerSource: EventSource
 {
     public:
         TimerSource(uint32_t delay);
+        void start(uint32_t delay);
+        void start();
         anEvent poll();
     private:
+        bool isActive;
+        uint32_t delay;
+        uint32_t startTime;
 };
+
+
+// States and FSM
+
+enum softwareState
+{
+    invalidState,
+    showCurrentTime,
+    setCurrentTime,
+    showAlarmTime,
+    toggleAlarm
+};
+
+
 
 struct transitionTuple
 {
     eventType event;
-    FSMState newState;
+    softwareState newState;
     void (*transitionFunc)(void);
 };
 
-// state = [event1 -> transitionFunc1, newState1; event2 -> transitionFunc2, newState2; ...], ongoingFunc
 struct FSMState
 {
-        char statename[];
-        void (*churnFunc)(void);
-        transitionTuple tran[];
+    softwareState state;
+    void (*churnFunc)(void);
+    transitionTuple tran[5];
 };
 
 struct FSM
 {
-        FSMState state[] =
-        {
-            {
-                "showCurrentTime", showCurrentTimeSteady,
-                {
-                    {rotation, "showAlarmTime", emptyTransition},
-                    {buttonPress, "toggleAlarm", toggleAlarm},
-                    {longButtonPress, "setCurrentTime", emptyTransition}
-                }
-            },
-            {
-                "toggleAlarm", showAlarmStatus,
-                {
-                    {timeout, "showCurrentTime", emptyTransition}
-                },
-            },
-            {
-                "showAlarmTime", showAlarmTime,
-                {
-                    {timeout, "showCurrentTime", emptyTransition},
-                    {rotation, "showAlarmTime", updateAlarmTime}
-                }
-            },
-            {
-                "setCurrentTime", showCurrentTimeFlash,
-                {
-                    {timeout, "showCurrentTime", emptyTransition},
-                    {rotation, "setCurrentTime", updateCurrentTime}
-                }
-            }
-        };
+    FSMState state[4];
 };
-
 
 class Scheduler
 {

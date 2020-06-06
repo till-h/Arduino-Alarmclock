@@ -1,4 +1,6 @@
 #include "Events.h"
+#include "ClockConfig.h"
+
 
 // Event sources
 
@@ -24,40 +26,54 @@ void ButtonSource::buttonCallback()
     }
 }
 
+// TODO use internal FSM to distinguish long / short button presses.
 anEvent ButtonSource::poll()
 {
     uint32_t now = micros();
-    if (buttonChange != none)
+    if (buttonChange == released)
     {
-        if ((now - lastButtonChange < longPressThreshold) && (buttonChange == pressed))
-        {
-            unservedButtonChange = false;
-            return (anEvent){buttonPress, lastButtonChange, 0};
-        }
-        else if (unservedButtonChange)
-        {
-            unservedButtonChange = false;
-            return (anEvent){longButtonPress, lastButtonChange, 0};
-        }
-        else
-        {
-            return (anEvent){none, micros(), 0};
-        }
+        // if ((now - lastButtonChange < longPressThreshold) && (buttonChange == pressed))
+        // {
+        //     unservedButtonChange = false;
+        //     return (anEvent){buttonPress, lastButtonChange, 0};
+        // }
+        // else if (unservedButtonChange)
+        // {
+        //     unservedButtonChange = false;
+        //     return (anEvent){longButtonPress, lastButtonChange, 0};
+        // }
+        // else
+        // {
+        //     return (anEvent){none, micros(), 0};
+        // }
+        buttonChange = none;
+        return (anEvent){buttonPress, now, 0};
     }
 }
 
 
 RotationSource::RotationSource(uint8_t pin1, uint8_t pin2)
 {
-    
+    dial = RotaryDial(pin1, pin2);
 }
 
 void RotationSource::poll()
-{}
+{
+    int32_t rot = dial.getRotation();
+    uint32_t now = micros();
+    if (rotation != 0)
+    {
+        return (anEvent){EventType::rotation, now, rot};
+    }
+    else
+    {
+        return (anEvent){noEvent, now, 0};
+    }
+}
 
 
-TimerSource::TimerSource(uint32_t delay):
-    delay(delay),
+TimerSource::TimerSource():
+    delay(0),
     isActive(false),
     startTime(0)
 {}
@@ -96,16 +112,17 @@ anEvent TimerSource::poll()
 
 
 // Action and churn functions
+
 void churnShowCurrentTimeSteady()
 {}
 
 void churnShowCurrentTimeFlash()
 {}
 
-void tranSetCurrentTime()
+void tranSetCurrentTime(anEvent event)
 {}
 
-void tranToggleAlarm()
+void tranToggleAlarm(anEvent event)
 {}
 
 void churnShowAlarmStatus()
@@ -114,29 +131,78 @@ void churnShowAlarmStatus()
 void churnShowAlarmTime()
 {}
 
-void tranSetAlarmTime()
+void tranSetAlarmTime(anEvent event)
 {}
 
-void tranEmptyTransition()
+void tranEmptyTransition(anEvent event)
 {}
 
 
-Scheduler::Scheduler()
+// Scheduler
+
+Scheduler::Scheduler(FSM fsm)
 {
-    source[1] = ButtonSource;
-    source[2] = RotationSource;
-    source[3] = TimerSource;
+    uint8_t numSources = 3;
+    source[1] = ButtonSource(PUSH, 3000000); // TODO use 3E6 possible?
+    source[2] = RotationSource(ENC1, ENC2);
+    source[3] = TimerSource();
+
+    state = showCurrentTime;
 }
 
 Scheduler::run()
 {
-    // for source in sources
-    // event = source.poll
-    // if event is not None
-    // 
-
     while true
     {
+        // run churn function of current state
+        runChurnFunc(state);
 
+        // poll events
+        for (uint8_t i = 0; i < numSources; i++)
+        {
+            anEvent event = source[i].poll();
+            if (event.type != noEvent)
+            {
+                runTranFunc(state, event);
+                state = getNewState(state, event);
+                break; // break out of polling sources for the old state
+            }
+        }
     }
+}
+
+uint8_t Scheduler::getIndex(softwareState state)
+{
+    for (uint8_t i = 0; i < fsm.numStates; i++)
+    {
+        if (fsm.state[i].state == state)
+        {
+            return i;
+        }   
+    }
+    return 0;
+}
+
+void Scheduler::runChurnFunc(softwareState state)
+{
+    fsm.state[getIndex(state)].churnFunc();
+}
+
+uint8_t getTranIndex(uint8_t stateIndex, eventType event)
+{
+    for (uint8_t i = 0; i < fsm.state[stateIndex].numTrans; i++)
+    {
+        if (fsm.state[stateIndex].tran[i].event == event)
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
+void Scheduler::runTranFunc(softwareState state, anEvent event)
+{
+    uint8_t stateIndex = getIndex(state);
+    uint8_t tranIndex = getTranIndex(stateIndex, event.type);
+    fsm.state[stateIndex].tran[tranIndex].transitionFunc(event);
 }

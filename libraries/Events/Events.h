@@ -2,6 +2,7 @@
 #define Events_h
 
 #include "ClockUtil.h"
+#include "RotaryDial.h"
 
 
 // Events
@@ -60,6 +61,7 @@ class RotationSource: EventSource
         RotationSource(uint8_t pin1, uint8_t pin2);
         anEvent poll();
     private:
+        RotaryDial dial;
 };
 
 class TimerSource: EventSource
@@ -87,35 +89,47 @@ enum softwareState
     toggleAlarm
 };
 
-
-
 struct transitionTuple
 {
     eventType event;
     softwareState newState;
-    void (*transitionFunc)(void);
+    void (*transitionFunc)(anEvent event);
 };
 
 struct FSMState
 {
+    uint8_t numTrans = 5;
     softwareState state;
     void (*churnFunc)(void);
-    transitionTuple tran[5];
+    transitionTuple tran[numTrans];
 };
 
 struct FSM
 {
-    FSMState state[4];
+    uint8_t numStates = 4;
+    FSMState state[numStates];
 };
+
+
+// Scheduler
 
 class Scheduler
 {
     public:
         Scheduler();
         void run();
+
     private:
         uint8_t numSources;
         EventSource source[3];
+
+        softwareState state;
+        FSM fsm;
+
+        uint8_t getIndex(softwareState state);
+        void runChurnFunc(softwareState state);
+        uint8_t getTranIndex(uint8_t stateIndex, eventType event);
+        void runTranFunc(softwareState state, anEvent event);
 
 };
 

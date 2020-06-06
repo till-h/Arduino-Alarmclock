@@ -18,6 +18,9 @@ enum softwareState
     toggleAlarm
 };
 
+// All-purpose structure for events
+// Depending on the event type, subsequent fields are meaningful or not.
+// TODO Could this be handled better by polymorphic structs?
 struct anEvent
 {
     eventType type;

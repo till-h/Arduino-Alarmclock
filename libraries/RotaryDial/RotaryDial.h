@@ -16,7 +16,8 @@
 class RotaryDial
 {
 public:
-    RotaryDial( uint8_t rot1, uint8_t rot2, uint8_t push, void (*pushCallback)() );
+    RotaryDial(uint8_t rot1, uint8_t rot2, uint8_t push, void (*pushCallback)() );
+    RotaryDial(uint8_t rot1, uint8_t rot2);
     int16_t       getRotation();
 
 private:

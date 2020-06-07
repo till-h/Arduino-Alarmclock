@@ -25,16 +25,16 @@ void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs,
     _showing = false;
 }
 
-void DotMatrix::displayTime(uint8_t hour, uint8_t minute, bool force_update)
+void DotMatrix::displayTime(aTime time, bool force_update)
 {
     // extract digits
-    uint8_t h0 = hour / 10; // tens of hours
-    uint8_t h1 = hour % 10; // hours
-    uint8_t m0 = minute / 10; // tens of minutes
-    uint8_t m1 = minute % 10; // minutes
+    uint8_t h0 = time.h / 10; // tens of hours
+    uint8_t h1 = time.h % 10; // hours
+    uint8_t m0 = time.m / 10; // tens of minutes
+    uint8_t m1 = time.m % 10; // minutes
 
     // only update if display needs to change
-    if (hour != last_hour || minute != last_minute || force_update)
+    if (time.h != last_hour || time.m != last_minute || force_update)
     {
         if (h0 != 0) // skip leading zero
         {
@@ -60,11 +60,11 @@ void DotMatrix::displayTime(uint8_t hour, uint8_t minute, bool force_update)
             setColumn(18, B00000000);
         }
     }
-    last_hour = hour;
-    last_minute = minute;
+    last_hour = time.h;
+    last_minute = time.m;
 }
 
-void DotMatrix::blinkTime(uint8_t hour, uint8_t minute)
+void DotMatrix::blinkTime(aTime time)
 {
     uint32_t now = micros();
 
@@ -72,7 +72,7 @@ void DotMatrix::blinkTime(uint8_t hour, uint8_t minute)
     {
         if (_showing == false)
         {
-            displayTime(hour, minute, true);
+            displayTime(time, true);
             _showing = true;
         }
         else

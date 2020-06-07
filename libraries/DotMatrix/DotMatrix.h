@@ -12,6 +12,7 @@
 
 #include "Arduino.h"
 #include "LedControl.h"
+#include "ClockUtil.h"
 
 // display font for numbers
 // set via preprocessor to save program memory
@@ -27,8 +28,8 @@ public:
     DotMatrix();
     void setup(uint8_t dta, uint8_t clk, uint8_t cs, uint8_t num,
                uint8_t brightness = 0, uint32_t interval = 1000000);
-    void displayTime(uint8_t hour, uint8_t minute, bool force_update = false);
-    void blinkTime(uint8_t hour, uint8_t minute);
+    void displayTime(aTime time, bool force_update = false);
+    void blinkTime(aTime time);
     void displayAlarm(bool status);
 private:
     void setColumn(uint8_t col, byte value);

@@ -41,6 +41,19 @@ void Loudspeaker::ring()
     }
 }
 
+void Loudspeaker::ring(bool active)
+{
+    if (active)
+    {
+        ring();
+    }
+    else
+    {
+        beQuiet();
+    }
+    
+}
+
 void Loudspeaker::beQuiet()
 {
     if (_set)

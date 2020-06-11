@@ -23,7 +23,7 @@ struct anEvent
 {
     eventType type;
     uint32_t eventTime;
-    uint32_t rotation_ticks;
+    uint32_t rotationTicks;
 };
 
 
@@ -32,7 +32,7 @@ struct anEvent
 class EventSource
 {
     public:
-        anEvent poll() = 0;
+        anEvent poll();
     private:
 };
 
@@ -98,7 +98,7 @@ struct transitionTuple
 
 struct FSMState
 {
-    uint8_t numTrans = 5;
+    const static uint8_t numTrans = 5;
     softwareState state;
     void (*churnFunc)(void);
     transitionTuple tran[numTrans];
@@ -106,7 +106,7 @@ struct FSMState
 
 struct FSM
 {
-    uint8_t numStates = 4;
+    const static uint8_t numStates = 4;
     FSMState state[numStates];
 };
 
@@ -117,12 +117,13 @@ class Scheduler
 {
     public:
         Scheduler();
+        void setup(FSM fsm, softwareState initialState);
         void run();
 
-    private:
-        uint8_t numSources;
-        EventSource source[3];
+        const static uint8_t numSources = 3;
+        EventSource source[numSources];
 
+    private:
         softwareState state;
         FSM fsm;
 
@@ -130,7 +131,6 @@ class Scheduler
         void runChurnFunc(softwareState state);
         uint8_t getTranIndex(uint8_t stateIndex, eventType event);
         void runTranFunc(softwareState state, anEvent event);
-
 };
 
 #endif /* Events_h */

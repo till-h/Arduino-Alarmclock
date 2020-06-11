@@ -103,54 +103,30 @@ anEvent TimerSource::poll()
         uint32_t now = micros();
         if (now - startTime > delay)
         {
+            isActive = false;
             return (anEvent){timeout, now, 0};
         }
-        isActive = false;
     }
     return (anEvent){noEvent, now, 0};
 }
 
 
-// Action and churn functions
-
-void churnShowCurrentTimeSteady()
-{}
-
-void churnShowCurrentTimeFlash()
-{}
-
-void tranSetCurrentTime(anEvent event)
-{}
-
-void tranToggleAlarm(anEvent event)
-{}
-
-void churnShowAlarmStatus()
-{}
-
-void churnShowAlarmTime()
-{}
-
-void tranSetAlarmTime(anEvent event)
-{}
-
-void tranEmptyTransition(anEvent event)
-{}
-
-
 // Scheduler
 
-Scheduler::Scheduler(FSM fsm)
+Scheduler::Scheduler()
 {
-    uint8_t numSources = 3;
     source[1] = ButtonSource(PUSH, 3000000); // TODO use 3E6 possible?
     source[2] = RotationSource(ENC1, ENC2);
     source[3] = TimerSource();
-
-    state = showCurrentTime;
 }
 
-Scheduler::run()
+void Scheduler::setup(FSM fsm, softwareState initialState)
+{
+    state = initialState;
+    self->fsm = fsm;
+}
+
+void Scheduler::run()
 {
     while true
     {

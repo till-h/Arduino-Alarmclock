@@ -92,11 +92,11 @@ void loop() {
         case displayCurrentTime:        
             Serial.println("Case: displayCurrentTime"); 
             clk.readTime(&actualTime);
-            matrix.blinkTime(actualTime.h, actualTime.m);
+            matrix.blinkTime(actualTime);
             break;
         case displayAlarmTime:
             Serial.println("Case: displayAlarmTime");
-            matrix.displayTime(alarmTime.h, alarmTime.m);
+            matrix.displayTime(alarmTime);
             break;
         case displayAlarmStatus:
             Serial.println("Case: displayAlarmStatus");

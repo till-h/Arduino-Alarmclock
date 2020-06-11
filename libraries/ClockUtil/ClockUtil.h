@@ -22,7 +22,7 @@ struct clockState
 {
     aTime currentTime, alarmTime;
     bool alarmIsActive;
-}
+};
 
 // Utility functions
 

@@ -32,9 +32,10 @@ struct anEvent
 class EventSource
 {
     public:
-        anEvent poll();
-    private:
+        virtual anEvent poll() = 0;
 };
+
+enum _buttonChange {press, release, none};
 
 // TODO Build FSM internal to Button class to distinguish short/long button press.
 // NOTE: Deciding whether the button was pressed long or short should be handled inside the ButtonSource class,
@@ -46,13 +47,13 @@ class ButtonSource: EventSource
     public:
         ButtonSource(uint8_t pin, uint32_t longPressThreshold);
         anEvent poll();
-    private:
-        uint8_t pin;
-        uint32_t lastButtonChange;
+
+        static uint8_t pin;        
+        static uint32_t lastButtonChange;
         uint32_t longPressThreshold;
-        enum {press, release, none} buttonChange; // button change events (it has just been pressed etc.)
-        enum {pressed, released, initialUndefined} buttonState; // button state (it currently is down etc.)
-        void buttonCallback();
+        static _buttonChange buttonChange; // button change events (it has just been pressed etc.)
+        //static enum _buttonState {pressed, released, initialUndefined} buttonState; // button state (it currently is down etc.)
+        static void buttonCallback();
 };
 
 class RotationSource: EventSource
@@ -67,9 +68,11 @@ class RotationSource: EventSource
 class TimerSource: EventSource
 {
     public:
+        TimerSource();
         TimerSource(uint32_t delay);
-        void start(uint32_t delay);
         void start();
+        void start(uint32_t delay);
+        void cancel();
         anEvent poll();
     private:
         bool isActive;
@@ -120,13 +123,15 @@ class Scheduler
         void setup(FSM fsm, softwareState initialState);
         void run();
 
-        const static uint8_t numSources = 3;
-        EventSource source[numSources];
+        ButtonSource butSrc;
+        RotationSource rotSrc;
+        TimerSource timSrc;
 
     private:
         softwareState state;
         FSM fsm;
 
+        softwareState getNewState(softwareState state, anEvent event);
         uint8_t getIndex(softwareState state);
         void runChurnFunc(softwareState state);
         uint8_t getTranIndex(uint8_t stateIndex, eventType event);

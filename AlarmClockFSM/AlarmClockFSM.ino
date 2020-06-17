@@ -55,7 +55,7 @@ void tranSetCurrentTime(anEvent event)
 
 void tranToggleAlarm(anEvent event)
 {
-    scheduler.source[3].start(1E6);
+    scheduler.timSrc.start(1E6);
     clkState.alarmIsActive = !clkState.alarmIsActive;
 }
 
@@ -83,7 +83,7 @@ void tranSetAlarmTime(anEvent event)
 
 void tranIntoShowAlarmTime(anEvent event)
 {
-    scheduler.source[3].start(3E6);
+    scheduler.timSrc.start(3E6);
 }
 
 void tranEmptyTransition(anEvent event)

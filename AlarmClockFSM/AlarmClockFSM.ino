@@ -132,7 +132,7 @@ FSM fsm =
 
 void setup()
 { 
-    matrix.setup(DIN, CLK, CS, 3, 0, 3E5);
+    matrix.setup(DIN, CLK, CS, 0, 3E5);
     ls.initialise(BEEP);
 
     clk.readTime(&clkState.currentTime);

@@ -56,7 +56,7 @@ void setup() {
     uint8_t dummyVar = 0;
     clk.readAlarmTime(&alarmTime);
 
-    matrix.setup(DIN, CLK, CS, 3);
+    matrix.setup(DIN, CLK, CS);
     
     ls.initialise(BEEP);
 }

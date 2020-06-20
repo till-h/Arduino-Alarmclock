@@ -10,11 +10,10 @@
 #include <DotMatrix.h>
 
 DotMatrix::DotMatrix() {}
-
 void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs,
-                      uint8_t num, uint8_t brightness, uint32_t interval)
+                      uint8_t brightness, uint32_t interval)
 {
-    lc.setup(dta, clk, cs, num);
+    lc.setup(dta, clk, cs, 3); // 3 8x8 segments
     for(int8_t i = 0; i < lc.getDeviceCount(); i++)
     {
         lc.clearDisplay(i);
@@ -25,7 +24,7 @@ void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs,
     _showing = false;
 }
 
-void DotMatrix::displayTime(aTime time, bool force_update)
+void DotMatrix::displayTime(aTime time)
 {
     // extract digits
     uint8_t h0 = time.h / 10; // tens of hours
@@ -33,35 +32,26 @@ void DotMatrix::displayTime(aTime time, bool force_update)
     uint8_t m0 = time.m / 10; // tens of minutes
     uint8_t m1 = time.m % 10; // minutes
 
-    // only update if display needs to change
-    if (time.h != last_hour || time.m != last_minute || force_update)
+    clearCache();
+    if (h0 != 0) // skip leading zero
     {
-        if (h0 != 0) // skip leading zero
-        {
-            for (uint8_t col = 0; col < 5; col++)
-                setColumn(col, n[h0][col]);
-        }
-        else
-        {
-            for (uint8_t col = 0; col < 5; col++)
-                setColumn(col, B00000000);
-        }
-        for (uint8_t col = 6; col < 11; col++)
-            setColumn(col, n[h1][col - 6]);
-        for (uint8_t col = 13; col < 18; col++)
-            setColumn(col, n[m0][col - 13]);
-        for (uint8_t col = 19; col < 24; col++)
-            setColumn(col, n[m1][col - 19]);
-        if (last_hour < 0)
-        {
-            setColumn(5, B00000000);
-            setColumn(11, B00000000);
-            setColumn(12, B00000000);
-            setColumn(18, B00000000);
-        }
+        for (uint8_t col = 0; col < 5; col++)
+            setCacheColumn(col, n[h0][col]);
     }
-    last_hour = time.h;
-    last_minute = time.m;
+    else
+    {
+        for (uint8_t col = 0; col < 5; col++)
+            setCacheColumn(col, B00000000);
+    }
+    for (uint8_t col = 6; col < 11; col++)
+        setCacheColumn(col, n[h1][col - 6]);
+    for (uint8_t col = 13; col < 18; col++)
+        setCacheColumn(col, n[m0][col - 13]);
+    for (uint8_t col = 19; col < 24; col++)
+        setCacheColumn(col, n[m1][col - 19]);
+
+
+
 }
 
 void DotMatrix::blinkTime(aTime time)
@@ -91,10 +81,10 @@ void DotMatrix::displayAlarm(bool status)
         uint8_t col = 0;
         // display clock symbol
         for (; col < 9; col++)
-            setColumn(col, clock[col]);
+            setCacheColumn(col, clock[col]);
         // display on / off
         for (; col < 24; col++)
-            setColumn(col, onoff[int8_t(status)][col - 9]);
+            setCacheColumn(col, onoff[int8_t(status)][col - 9]);
         // mark which alarm was last set to avoid
         // needlessly updating the display if it
         // currently displays the correct status
@@ -109,21 +99,33 @@ void DotMatrix::displayAlarm(bool status)
  * Use column number to determine which matrix is addressed.
  * TODO Faster to use setRow, https://playground.arduino.cc/Main/LedControl/
  */
-void DotMatrix::setColumn(uint8_t col, byte value)
+void DotMatrix::setCacheColumn(uint8_t col, uint8_t value)
 {
-    lc.setColumn(col / 8, col % 8, value);
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        display_cache[(col / 8) * 8 + i] &= ~(value << i)
+    }
 }
 
-void DotMatrix::clear()
+void DotMatrix::setMatrixRow(uint8_t display, uint8_t row, uint8_t value)
+{
+    lc.setRow(display, row, value);
+}
+
+void DotMatrix::clearCache()
+{
+    for (uint8_t i = 0; i < 24; i++)
+    {
+        display_cache[i] = 0U;
+    } 
+}
+
+void DotMatrix::clearMatrix()
 {
     for (int i = 0; i < lc.getDeviceCount(); i++)
     {
         lc.clearDisplay(i);
     }
-    // for (int i = 0; i < lc.getDeviceCount() * 8; i++)
-    // {
-    //     setColumn(i, B00000000);
-    // }
 }
 
 #ifdef CALLIGRAPHY

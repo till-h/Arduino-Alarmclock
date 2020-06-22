@@ -6,118 +6,164 @@
  *  Till Hackler, 2015-2020
  */
 
-#include "ClockUtil.h"
+
 #include "RotaryDial.h"
-#include "LedControl.h"
 #include "Loudspeaker.h"
 #include "DotMatrix.h"
 #include "DS3231.h"
-#include "string.h"
-
+#include "Events.h"
 #include "ClockConfig.h"
+#include "ClockUtil.h"
 
-//////////////////////
-// Global variables //
-//////////////////////
 
-aStatus status = displayCurrentTime;
-bool alarmIsActive = false;
-
-// Clock
+// Hardware control
 DS3231 clk;
-
-aTime actualTime, alarmTime;
-
-// Dot matrix display
 DotMatrix matrix;
-
-// Control button (rotary encoder)
-uint32_t lastRotation = 0;
-uint32_t lastPress = 0;
-
-// Encoder button callback
-void buttonDepressed()
-{
-    lastPress = micros();
-    alarmIsActive = !alarmIsActive;
-}
-
-RotaryDial dial(ENC1, ENC2, PUSH, &buttonDepressed);
-
 Loudspeaker ls;
 
-void setup() {
-    Serial.begin(SERIAL_BAUD_RATE);
-    Serial.println("Alarm Clock v0.1");
-    Serial.println("Alarm time set to:");
-    clk.printAlarmTime();
-    
-    // Read in alarm time
-    uint8_t dummyVar = 0;
-    clk.readAlarmTime(&alarmTime);
 
-    matrix.setup(DIN, CLK, CS, 3);
-    
-    ls.initialise(BEEP);
-}
+// Software control
+clockState clkState;
+Scheduler scheduler;
 
-void loop() {
-    status = displayCurrentTime;
-    int32_t rotation = dial.getRotation();
 
-    uint32_t now = micros();
-    if (rotation != 0) {
-        changeTime(&alarmTime, rotation);
-        status = displayAlarmTime;
-        lastRotation = now;
-    }
+// Action and churn functions
 
-    // Continue to display alarm time for a while after the last rotation
-    else if (now - lastRotation < 1000000)
+// helper function
+void ringIfActive()
+{
+    if (clkState.alarmIsActive &&
+        (clkState.alarmTime.h == clkState.currentTime.h) &&
+        (clkState.alarmTime.m == clkState.currentTime.m))
     {
-        status = displayAlarmTime;
-    }
-    else if (now - lastPress < 1000000)
-    {
-        status = displayAlarmStatus;
-    }
-    else
-    {
-        // Persist alarm time on clock chip - stored time survives power cuts
-        clk.setAlarmTime(alarmTime);
-    }
-
-    switch(status)
-    {
-        case displayCurrentTime:        
-            Serial.println("Case: displayCurrentTime"); 
-            clk.readTime(&actualTime);
-            matrix.blinkTime(actualTime);
-            break;
-        case displayAlarmTime:
-            Serial.println("Case: displayAlarmTime");
-            matrix.displayTime(alarmTime);
-            break;
-        case displayAlarmStatus:
-            Serial.println("Case: displayAlarmStatus");
-            matrix.displayAlarm(alarmIsActive);
-            break;
-        case displaySet:
-            Serial.println("Case: displaySet");
-            //matrix.displaySet();
-            break;
-        case displaySetTime:
-            Serial.println("Case: displaySetTime");
-            //matrix.displaySetTime();
-    }
-
-    if ((alarmTime.h == actualTime.h) && (alarmTime.m == actualTime.m) && alarmIsActive)
-    {
-      Serial.println("Ring!");
         ls.ring();
     }
     else
     {
         ls.beQuiet();
     }
+}
+
+void churnShowCurrentTimeSteady()
+{
+    clk.readTime(&clkState.currentTime);
+    matrix.displayTime(clkState.currentTime);
+    ringIfActive();
+}
+
+void churnShowCurrentTimeFlash()
+{
+    clk.readTime(&clkState.currentTime);
+    matrix.blinkTime(clkState.currentTime);
+    ringIfActive();
+}
+
+void tranCacheCurrentTime(anEvent event)
+{
+    changeTime(&clkState.currentTime, event.rotationTicks);
+}
+
+void tranSetCurrentTime(anEvent event)
+{
+    clk.setTime(clkState.currentTime); // update hardware time
+}
+
+void tranToggleAlarm(anEvent event)
+{
+    scheduler.timSrc.start(1E6);
+    clkState.alarmIsActive = !clkState.alarmIsActive;
+}
+
+void churnShowAlarmStatus()
+{
+    matrix.displayAlarm(clkState.alarmIsActive);
+    ringIfActive();
+}
+
+void churnShowAlarmTime()
+{
+    matrix.displayTime(clkState.alarmTime);
+    ringIfActive();
+}
+
+void tranCacheAlarmTime(anEvent event)
+{
+    changeTime(&clkState.alarmTime, event.rotationTicks); // update software time
+    scheduler.timSrc.start(1E6); // reset timeout
+}
+
+void tranSetAlarmTime(anEvent event)
+{
+    clk.setAlarmTime(clkState.alarmTime); // update hardware time
+}
+
+void tranIntoShowAlarmTime(anEvent event)
+{
+    scheduler.timSrc.start(1E6);
+}
+
+void tranEmptyTransition(anEvent event)
+{}
+
+
+// Finite State Machine
+
+FSM fsm = 
+    { // initialise struct
+        { // array
+            { // zeroth array element
+                showCurrentTime, churnShowCurrentTimeSteady,
+                {
+                    {rotation, showAlarmTime, tranIntoShowAlarmTime},
+                    {buttonPress, toggleAlarm, tranToggleAlarm},
+                    {longButtonPress, setCurrentTime, tranEmptyTransition}
+                }
+            },
+            {
+                toggleAlarm, churnShowAlarmStatus,
+                {
+                    {timeout, showCurrentTime, tranEmptyTransition},
+                    {buttonPress, toggleAlarm, tranToggleAlarm}
+                }
+            },
+            {
+                showAlarmTime, churnShowAlarmTime,
+                {
+                    {timeout, showCurrentTime, tranSetAlarmTime},
+                    {rotation, showAlarmTime, tranCacheAlarmTime}
+                }
+            },
+            {
+                setCurrentTime, churnShowCurrentTimeFlash,
+                {
+                    {timeout, showCurrentTime, tranSetCurrentTime},
+                    {rotation, setCurrentTime, tranCacheCurrentTime}
+                }
+            }
+        }
+    };
+
+
+// Arduino Setup
+
+void setup()
+{
+    Serial.begin(9600);
+    matrix.setup(DIN, CLK, CS, 3, 0, 3E5);
+    ls.initialise(BEEP);
+
+    clk.readTime(&clkState.currentTime);
+    clk.readAlarmTime(&clkState.alarmTime);
+    clkState.alarmIsActive = false;
+
+    scheduler.setup(fsm, showCurrentTime);
+
+}
+
+
+// Arduino Main loop
+
+void loop()
+{
+    scheduler.run();
 }

@@ -32,7 +32,7 @@ void ButtonSource::buttonCallback()
 }
 
 // TODO use internal FSM to distinguish long / short button presses.
-anEvent ButtonSource::poll()
+void ButtonSource::poll(anEvent * e)
 {
     uint32_t now = micros();
     if (buttonChange == release)
@@ -52,8 +52,13 @@ anEvent ButtonSource::poll()
         //     return (anEvent){none, micros(), 0};
         // }
         buttonChange = none;
-        return (anEvent){buttonPress, now, 0};
+        *e = (anEvent){buttonPress, now, 0};
     }
+    else
+    {
+        *e = (anEvent){noEvent, now, 0};
+    }
+    
 }
 
 
@@ -61,17 +66,17 @@ RotationSource::RotationSource(uint8_t pin1, uint8_t pin2):
     dial(RotaryDial(pin1, pin2))
 {}
 
-anEvent RotationSource::poll()
+void RotationSource::poll(anEvent * e)
 {
     int32_t rot = dial.getRotation();
     uint32_t now = micros();
-    if (rotation != 0)
+    if (rot != 0)
     {
-        return (anEvent){eventType::rotation, now, rot};
+        *e = (anEvent){eventType::rotation, now, rot};
     }
     else
     {
-        return (anEvent){noEvent, now, 0};
+        *e = (anEvent){noEvent, now, 0};
     }
 }
 
@@ -82,6 +87,7 @@ TimerSource::TimerSource():
     startTime(0)
 {}
 
+// Can be used to start and re-set timeout.
 void TimerSource::start(uint32_t delay)
 {
     isActive = true;
@@ -100,7 +106,7 @@ void TimerSource::cancel()
     isActive = false;
 }
 
-anEvent TimerSource::poll()
+void TimerSource::poll(anEvent * e)
 {
     uint32_t now = micros();
     if (isActive)
@@ -108,10 +114,11 @@ anEvent TimerSource::poll()
         if (now - startTime > delay)
         {
             isActive = false;
-            return (anEvent){timeout, now, 0};
+            *e = (anEvent){timeout, now, 0};
+            return;
         }
     }
-    return (anEvent){noEvent, now, 0};
+    *e = (anEvent){noEvent, now, 0};
 }
 
 
@@ -139,14 +146,14 @@ void Scheduler::run()
 
         // poll events
         anEvent event;
-        event = butSrc.poll();
+        butSrc.poll(&event);
         if (event.type == noEvent)
         {
-            event = rotSrc.poll();
+            rotSrc.poll(&event);
         }
         if (event.type == noEvent)
         {
-            event = timSrc.poll();
+            timSrc.poll(&event);
         }
         if (event.type != noEvent)
         {

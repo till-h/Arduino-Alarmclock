@@ -29,18 +29,33 @@ Scheduler scheduler;
 
 // Action and churn functions
 
+// helper function
+void ringIfActive()
+{
+    if (clkState.alarmIsActive &&
+        (clkState.alarmTime.h == clkState.currentTime.h) &&
+        (clkState.alarmTime.m == clkState.currentTime.m))
+    {
+        ls.ring();
+    }
+    else
+    {
+        ls.beQuiet();
+    }
+}
+
 void churnShowCurrentTimeSteady()
 {
     clk.readTime(&clkState.currentTime);
     matrix.displayTime(clkState.currentTime);
-    ls.ring(clkState.alarmIsActive);
+    ringIfActive();
 }
 
 void churnShowCurrentTimeFlash()
 {
     clk.readTime(&clkState.currentTime);
     matrix.blinkTime(clkState.currentTime);
-    ls.ring(clkState.alarmIsActive);
+    ringIfActive();
 }
 
 void tranCacheCurrentTime(anEvent event)
@@ -62,18 +77,19 @@ void tranToggleAlarm(anEvent event)
 void churnShowAlarmStatus()
 {
     matrix.displayAlarm(clkState.alarmIsActive);
-    ls.ring(clkState.alarmIsActive);
+    ringIfActive();
 }
 
 void churnShowAlarmTime()
 {
     matrix.displayTime(clkState.alarmTime);
-    ls.ring(clkState.alarmIsActive);
+    ringIfActive();
 }
 
 void tranCacheAlarmTime(anEvent event)
 {
     changeTime(&clkState.alarmTime, event.rotationTicks); // update software time
+    scheduler.timSrc.start(1E6); // reset timeout
 }
 
 void tranSetAlarmTime(anEvent event)
@@ -83,7 +99,7 @@ void tranSetAlarmTime(anEvent event)
 
 void tranIntoShowAlarmTime(anEvent event)
 {
-    scheduler.timSrc.start(3E6);
+    scheduler.timSrc.start(1E6);
 }
 
 void tranEmptyTransition(anEvent event)
@@ -128,10 +144,11 @@ FSM fsm =
     };
 
 
-// Setup code
+// Arduino Setup
 
 void setup()
-{ 
+{
+    Serial.begin(9600);
     matrix.setup(DIN, CLK, CS, 3, 0, 3E5);
     ls.initialise(BEEP);
 
@@ -143,7 +160,9 @@ void setup()
 
 }
 
-// Program loop
+
+// Arduino Main loop
+
 void loop()
 {
     scheduler.run();

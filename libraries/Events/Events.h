@@ -32,7 +32,7 @@ struct anEvent
 class EventSource
 {
     public:
-        virtual anEvent poll() = 0;
+        virtual void poll(anEvent * e) = 0;
 };
 
 enum _buttonChange {press, release, none};
@@ -46,7 +46,7 @@ class ButtonSource: EventSource
 {
     public:
         ButtonSource(uint8_t pin, uint32_t longPressThreshold);
-        anEvent poll();
+        void poll(anEvent * e);
 
         static uint8_t pin;        
         static uint32_t lastButtonChange;
@@ -60,7 +60,7 @@ class RotationSource: EventSource
 {
     public:
         RotationSource(uint8_t pin1, uint8_t pin2);
-        anEvent poll();
+        void poll(anEvent * e);
     private:
         RotaryDial dial;
 };
@@ -73,7 +73,7 @@ class TimerSource: EventSource
         void start();
         void start(uint32_t delay);
         void cancel();
-        anEvent poll();
+        void poll(anEvent * e);
     private:
         bool isActive;
         uint32_t delay;

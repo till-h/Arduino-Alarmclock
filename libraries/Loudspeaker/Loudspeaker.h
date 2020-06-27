@@ -21,7 +21,6 @@ class Loudspeaker
         Loudspeaker();
         void initialise(int8_t pin, int16_t freq = 31, uint32_t interval = 1000000);
         void ring();
-        void ring(bool active);
         void beQuiet();
     private:
         int8_t _pin;

@@ -41,24 +41,8 @@ void Loudspeaker::ring()
     }
 }
 
-void Loudspeaker::ring(bool active)
-{
-    if (active)
-    {
-        ring();
-    }
-    else
-    {
-        beQuiet();
-    }
-    
-}
-
 void Loudspeaker::beQuiet()
 {
-    if (_set)
-    {
-        noTone(_pin);
-        _set = false;
-    }
+    noTone(_pin);
+    _set = false;
 }

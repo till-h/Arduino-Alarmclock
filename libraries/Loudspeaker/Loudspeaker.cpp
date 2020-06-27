@@ -5,8 +5,6 @@
   one of the Arduino pins and GND.
 
   Created by Till Hackler, December 2015
-
-  TODO: implement on-off beeping using clock inside the Loudspeaker class
 */
 
 

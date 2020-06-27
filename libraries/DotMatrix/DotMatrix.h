@@ -19,9 +19,6 @@
 #define CALLIGRAPHY
 // #define SANS
 
-// TODO use setRow instead of setColumn. Faster. Will require assembling dot raster before setting.
-// TODO Any display-changing functions should compare what they are asked to show with what is already being shown.
-// Across all matrices, only rows which have changed should be updated (I seem to remember setRow is as fast as setLed).
 class DotMatrix
 {
 public:

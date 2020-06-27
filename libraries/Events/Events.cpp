@@ -126,7 +126,7 @@ void TimerSource::poll(anEvent * e)
 
 Scheduler::Scheduler():
 
-    butSrc(ButtonSource(PUSH, 3000000)), // TODO use 3E6 possible?
+    butSrc(ButtonSource(PUSH, 3E6)),
     rotSrc(RotationSource(ENC1, ENC2)),
     timSrc(TimerSource())
 {}

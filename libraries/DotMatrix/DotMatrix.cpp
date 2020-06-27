@@ -33,15 +33,11 @@ void DotMatrix::displayTime(aTime time)
     uint8_t m1 = time.m % 10; // minutes
 
     clearCache();
+
     if (h0 != 0) // skip leading zero
     {
         for (uint8_t col = 0; col < 5; col++)
             setCacheColumn(col, n[h0][col]);
-    }
-    else
-    {
-        for (uint8_t col = 0; col < 5; col++)
-            setCacheColumn(col, B00000000);
     }
     for (uint8_t col = 6; col < 11; col++)
         setCacheColumn(col, n[h1][col - 6]);
@@ -50,7 +46,7 @@ void DotMatrix::displayTime(aTime time)
     for (uint8_t col = 19; col < 24; col++)
         setCacheColumn(col, n[m1][col - 19]);
 
-
+    updateDisplayFromCache();
 
 }
 
@@ -62,12 +58,12 @@ void DotMatrix::blinkTime(aTime time)
     {
         if (_showing == false)
         {
-            displayTime(time, true);
+            displayTime(time);
             _showing = true;
         }
         else
         {
-            clear();
+            clearCache();
             _showing = false;
         }
         _lastFlank = now;
@@ -76,8 +72,8 @@ void DotMatrix::blinkTime(aTime time)
 
 void DotMatrix::displayAlarm(bool status)
 {
-    if (int8_t(status) - 2 != last_hour)
-    {
+        clearCache();
+
         uint8_t col = 0;
         // display clock symbol
         for (; col < 9; col++)
@@ -85,14 +81,8 @@ void DotMatrix::displayAlarm(bool status)
         // display on / off
         for (; col < 24; col++)
             setCacheColumn(col, onoff[int8_t(status)][col - 9]);
-        // mark which alarm was last set to avoid
-        // needlessly updating the display if it
-        // currently displays the correct status
-        // use bogus hours to mark alarm status display:
-        // if status = true, last hour = -1;
-        // if status = false, last hour = -2
-        last_hour = int8_t(status) - 2;
-    }
+
+        updateDisplayFromCache();
 }
 
 /*
@@ -103,13 +93,35 @@ void DotMatrix::setCacheColumn(uint8_t col, uint8_t value)
 {
     for (uint8_t i = 0; i < 8; i++)
     {
-        display_cache[(col / 8) * 8 + i] &= ~(value << i)
+        uint8_t * row = &display_cache[(col / 8) * 8 + i];
+        copyBit(value, i, row, col % 8);
     }
 }
 
-void DotMatrix::setMatrixRow(uint8_t display, uint8_t row, uint8_t value)
+// Does this work?
+void DotMatrix::copyBit(const uint8_t source, uint8_t source_index,  uint8_t * const target, const uint8_t target_index)
 {
-    lc.setRow(display, row, value);
+    // bit_index starting from least significant (rightmost) bit
+    if (source & (1U << source_index) == 0)
+    {
+        *target = *target & ~(1U << target_index);
+    }
+    else
+    {
+        *target = *target | (1U << target_index);
+    }
+}
+
+void DotMatrix::updateDisplayFromCache()
+{
+    for (uint8_t i = 0; i < 24; i++)
+    {
+        if (display_cache[i] != display[i])
+        {
+            lc.setRow(i % 8, i, display_cache[i]);
+            display[i] = display_cache[i];
+        }
+    }
 }
 
 void DotMatrix::clearCache()

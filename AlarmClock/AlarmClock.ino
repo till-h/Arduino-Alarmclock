@@ -20,6 +20,15 @@
 // Global variables //
 //////////////////////
 
+// State machine
+typedef enum aStatus {
+    displayCurrentTime,
+    displayAlarmTime,
+    displayAlarmStatus,
+    displaySet,
+    displaySetTime
+} aStatus; // make aStatus available inside common namespace
+
 aStatus status = displayCurrentTime;
 bool alarmIsActive = false;
 

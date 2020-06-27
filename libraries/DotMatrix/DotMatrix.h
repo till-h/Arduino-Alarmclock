@@ -28,17 +28,21 @@ public:
     DotMatrix();
     void setup(uint8_t dta, uint8_t clk, uint8_t cs,
                uint8_t brightness = 0, uint32_t interval = 1000000);
-    void displayTime(aTime time, bool force_update = false);
+    void displayTime(aTime time);
     void blinkTime(aTime time);
     void displayAlarm(bool status);
 private:
     LedControl lc;
     void setCacheColumn(uint8_t col, uint8_t value); // sets cache contents
     void setMatrixRow(uint8_t row, uint8_t value);
-    void setBit(uint8_t * value, uint8_t index, uint8_t bit);
+    void copyBit(const uint8_t source, uint8_t source_index,  uint8_t * const target, const uint8_t target_index);
+    void updateDisplayFromCache();
     void clearCache();
     void clearMatrix();
-    // Cache of matrix contents: 1st display is row 0-7, 2nd is 8-15, etc.
+
+    // Actual display contents, 1st display is row 0-7, 2nd is 8-15, etc.
+    uint8_t           display[24];
+    // Cache of display contents: in rows from 1...24
     uint8_t           display_cache[24];
 
     static byte       const n[10][5];
@@ -46,6 +50,7 @@ private:
     static byte       const onoff[2][15];
     uint32_t _interval;
     uint32_t _lastFlank;
+    bool _showing;
 };
 
 #endif // DOTMATRIX

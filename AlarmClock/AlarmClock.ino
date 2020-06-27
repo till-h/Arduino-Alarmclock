@@ -149,7 +149,7 @@ FSM fsm =
 void setup()
 {
     Serial.begin(9600);
-    matrix.setup(DIN, CLK, CS, 3, 0, 3E5);
+    matrix.setup(DIN, CLK, CS, 0, 3E5);
     ls.initialise(BEEP);
 
     clk.readTime(&clkState.currentTime);

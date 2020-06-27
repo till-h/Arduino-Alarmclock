@@ -24,7 +24,7 @@ class DotMatrix
 public:
     DotMatrix();
     void setup(uint8_t dta, uint8_t clk, uint8_t cs,
-               uint8_t brightness = 0, uint32_t interval = 5E5);
+               uint8_t brightness = 0, uint32_t interval = 1E5);
     void displayTime(aTime time);
     void blinkTime(aTime time);
     void displayAlarm(bool status);

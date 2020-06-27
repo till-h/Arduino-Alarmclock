@@ -6,28 +6,35 @@
 
 // Define static class variables of ButtonSource (i.e. allocate some memory)
 uint8_t ButtonSource::pin;
-uint32_t ButtonSource::lastButtonChange;
+uint32_t ButtonSource::buttonChangeTime;
 _buttonChange ButtonSource::buttonChange;
 
 ButtonSource::ButtonSource(uint8_t pin, uint32_t longPressThreshold)
 {
     ButtonSource::pin = pin; // Use namespace to distinguish static member from argument
-    longPressThreshold = longPressThreshold;
+    ButtonSource::longPressThreshold = longPressThreshold;
     buttonChange = none;
     pinMode(pin, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(pin), buttonCallback, CHANGE); // when button is released. TODO allow CHANGE
+    attachInterrupt(digitalPinToInterrupt(pin), buttonCallback, CHANGE);
 }
 
 void ButtonSource::buttonCallback()
 {
-    lastButtonChange = micros();
+    buttonChangeTime = micros();
     if (digitalRead(pin) == HIGH)
     {
         buttonChange = press;
     }
     else
     {
-        buttonChange = release;
+        if (buttonChange == press)
+        {
+            buttonChange = release;
+        }
+        else if (buttonChange == disregardRelease)
+        {
+            buttonChange = none;
+        }
     }
 }
 
@@ -35,22 +42,20 @@ void ButtonSource::buttonCallback()
 void ButtonSource::poll(anEvent * e)
 {
     uint32_t now = micros();
-    if (buttonChange == release)
+    if (buttonChange == press)
     {
-        // if ((now - lastButtonChange < longPressThreshold) && (buttonChange == pressed))
-        // {
-        //     unservedButtonChange = false;
-        //     return (anEvent){buttonPress, lastButtonChange, 0};
-        // }
-        // else if (unservedButtonChange)
-        // {
-        //     unservedButtonChange = false;
-        //     return (anEvent){longButtonPress, lastButtonChange, 0};
-        // }
-        // else
-        // {
-        //     return (anEvent){none, micros(), 0};
-        // }
+        if (now - buttonChangeTime > longPressThreshold)
+        {
+            buttonChange = disregardRelease;
+            *e = (anEvent){longButtonPress, now, 0};
+        }
+        else
+        {
+            *e = (anEvent){noEvent, now, 0};
+        }
+    }
+    else if (buttonChange == release)
+    {
         buttonChange = none;
         *e = (anEvent){buttonPress, now, 0};
     }

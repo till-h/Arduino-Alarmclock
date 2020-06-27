@@ -27,60 +27,6 @@ struct anEvent
 };
 
 
-// Event sources
-
-class EventSource
-{
-    public:
-        virtual void poll(anEvent * e) = 0;
-};
-
-enum _buttonChange {press, release, none};
-
-// TODO Build FSM internal to Button class to distinguish short/long button press.
-// NOTE: Deciding whether the button was pressed long or short should be handled inside the ButtonSource class,
-// probably inside the poll function (where the duration since the last change is checked).
-// The long/short press differentiation should not seep out into the top-level FSM.
-// If it did, we'd probably require more states there and that's naff.
-class ButtonSource: EventSource
-{
-    public:
-        ButtonSource(uint8_t pin, uint32_t longPressThreshold);
-        void poll(anEvent * e);
-
-        static uint8_t pin;        
-        static uint32_t lastButtonChange;
-        uint32_t longPressThreshold;
-        static _buttonChange buttonChange; // button change events (it has just been pressed etc.)
-        //static enum _buttonState {pressed, released, initialUndefined} buttonState; // button state (it currently is down etc.)
-        static void buttonCallback();
-};
-
-class RotationSource: EventSource
-{
-    public:
-        RotationSource(uint8_t pin1, uint8_t pin2);
-        void poll(anEvent * e);
-    private:
-        RotaryDial dial;
-};
-
-class TimerSource: EventSource
-{
-    public:
-        TimerSource();
-        TimerSource(uint32_t delay);
-        void start();
-        void start(uint32_t delay);
-        void cancel();
-        void poll(anEvent * e);
-    private:
-        bool isActive;
-        uint32_t delay;
-        uint32_t startTime;
-};
-
-
 // States and FSM
 
 enum softwareState
@@ -111,6 +57,63 @@ struct FSM
 {
     const static uint8_t numStates = 4;
     FSMState state[numStates];
+};
+
+
+// Event sources
+
+class EventSource
+{
+    public:
+        virtual void poll(anEvent * e) = 0;
+};
+
+// button change events (it has just been pressed etc.)
+enum _buttonChange {press, release, disregardRelease, none};
+// button state (it currently is down etc.)
+//enum _buttonState {pressed, released, initialUndefined};
+
+
+// TODO Build FSM internal to Button class to distinguish short/long button press.
+// NOTE: Deciding whether the button was pressed long or short should be handled inside the ButtonSource class,
+// probably inside the poll function (where the duration since the last change is checked).
+// The long/short press differentiation should not seep out into the top-level FSM.
+// If it did, we'd probably require more states there and that's naff.
+class ButtonSource: EventSource
+{
+    public:
+        ButtonSource(uint8_t pin, uint32_t longPressThreshold);
+        void poll(anEvent * e);
+    private:
+        static uint8_t pin;        
+        static uint32_t buttonChangeTime;
+        uint32_t longPressThreshold;
+        static _buttonChange buttonChange;
+        static void buttonCallback();
+};
+
+class RotationSource: EventSource
+{
+    public:
+        RotationSource(uint8_t pin1, uint8_t pin2);
+        void poll(anEvent * e);
+    private:
+        RotaryDial dial;
+};
+
+class TimerSource: EventSource
+{
+    public:
+        TimerSource();
+        TimerSource(uint32_t delay);
+        void start();
+        void start(uint32_t delay);
+        void cancel();
+        void poll(anEvent * e);
+    private:
+        bool isActive;
+        uint32_t delay;
+        uint32_t startTime;
 };
 
 

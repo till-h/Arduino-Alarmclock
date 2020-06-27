@@ -53,7 +53,7 @@ void churnShowCurrentTimeSteady()
 
 void churnShowCurrentTimeFlash()
 {
-    clk.readTime(&clkState.currentTime);
+    // clk.readTime(&clkState.currentTime);
     matrix.blinkTime(clkState.currentTime);
     ringIfActive();
 }
@@ -61,11 +61,17 @@ void churnShowCurrentTimeFlash()
 void tranCacheCurrentTime(anEvent event)
 {
     changeTime(&clkState.currentTime, event.rotationTicks);
+    scheduler.timSrc.start(5E6); // reset timeout
 }
 
 void tranSetCurrentTime(anEvent event)
 {
     clk.setTime(clkState.currentTime); // update hardware time
+}
+
+void tranIntoSetCurrentTime(anEvent event)
+{
+    scheduler.timSrc.start(5E6);
 }
 
 void tranToggleAlarm(anEvent event)
@@ -116,7 +122,7 @@ FSM fsm =
                 {
                     {rotation, showAlarmTime, tranIntoShowAlarmTime},
                     {buttonPress, toggleAlarm, tranToggleAlarm},
-                    {longButtonPress, setCurrentTime, tranEmptyTransition}
+                    {longButtonPress, setCurrentTime, tranIntoSetCurrentTime}
                 }
             },
             {

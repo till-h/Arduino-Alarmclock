@@ -27,7 +27,7 @@ int16_t RotaryDial::getRotation()
         timeDelta = now - then;
         if (timeDelta <= fastRotThres)
         {
-            rotation *= 5;
+            rotation *= (4 + fastRotThres / timeDelta);
         }
         lastPosition = currentPosition;
         then = now;

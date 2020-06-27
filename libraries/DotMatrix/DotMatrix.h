@@ -31,7 +31,7 @@ public:
     void displayTime(aTime time);
     void blinkTime(aTime time);
     void displayAlarm(bool status);
-//private:
+private:
     LedControl lc;
     void setCacheColumn(uint8_t col, uint8_t value); // sets cache contents
     void setMatrixRow(uint8_t row, uint8_t value);

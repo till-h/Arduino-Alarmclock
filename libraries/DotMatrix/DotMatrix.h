@@ -31,14 +31,14 @@ public:
     void displayTime(aTime time);
     void blinkTime(aTime time);
     void displayAlarm(bool status);
-private:
+//private:
     LedControl lc;
     void setCacheColumn(uint8_t col, uint8_t value); // sets cache contents
     void setMatrixRow(uint8_t row, uint8_t value);
     void copyBit(const uint8_t source, uint8_t source_index,  uint8_t * const target, const uint8_t target_index);
     void updateDisplayFromCache();
     void clearCache();
-    void clearMatrix();
+    void clearDisplay();
 
     // Actual display contents, 1st display is row 0-7, 2nd is 8-15, etc.
     uint8_t           display[24];

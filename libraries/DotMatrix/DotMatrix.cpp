@@ -14,12 +14,18 @@ void DotMatrix::setup(uint8_t dta, uint8_t clk, uint8_t cs,
                       uint8_t brightness, uint32_t interval)
 {
     lc.setup(dta, clk, cs, 3); // 3 8x8 segments
-    for(int8_t i = 0; i < lc.getDeviceCount(); i++)
+    for(uint8_t i = 0; i < lc.getDeviceCount(); i++)
     {
         lc.clearDisplay(i);
         lc.shutdown(i, false);
         lc.setIntensity(i, brightness);
     }
+    for (uint8_t i = 0; i < 24; i++)
+    {
+        display_cache[i] = 0U;
+        display[i] = 0U;
+    }
+    
     _interval = interval;
     _showing = false;
 }
@@ -63,7 +69,7 @@ void DotMatrix::blinkTime(aTime time)
         }
         else
         {
-            clearCache();
+            clearDisplay();
             _showing = false;
         }
         _lastFlank = now;
@@ -85,10 +91,6 @@ void DotMatrix::displayAlarm(bool status)
         updateDisplayFromCache();
 }
 
-/*
- * Use column number to determine which matrix is addressed.
- * TODO Faster to use setRow, https://playground.arduino.cc/Main/LedControl/
- */
 void DotMatrix::setCacheColumn(uint8_t col, uint8_t value)
 {
     for (uint8_t i = 0; i < 8; i++)
@@ -98,17 +100,16 @@ void DotMatrix::setCacheColumn(uint8_t col, uint8_t value)
     }
 }
 
-// Does this work?
 void DotMatrix::copyBit(const uint8_t source, uint8_t source_index,  uint8_t * const target, const uint8_t target_index)
 {
-    // bit_index starting from least significant (rightmost) bit
-    if (source & (1U << source_index) == 0)
+    // 7 - ... terms so that index = 0 refers to MSB
+    if ((source & (1U << 7 - source_index)) == 0U)
     {
-        *target = *target & ~(1U << target_index);
+        *target = *target & ~(1U << 7 - target_index);
     }
     else
     {
-        *target = *target | (1U << target_index);
+        *target = *target | (1U << 7 - target_index);
     }
 }
 
@@ -118,7 +119,7 @@ void DotMatrix::updateDisplayFromCache()
     {
         if (display_cache[i] != display[i])
         {
-            lc.setRow(i % 8, i, display_cache[i]);
+            lc.setRow(i / 8, i % 8, display_cache[i]);
             display[i] = display_cache[i];
         }
     }
@@ -132,12 +133,17 @@ void DotMatrix::clearCache()
     } 
 }
 
-void DotMatrix::clearMatrix()
+void DotMatrix::clearDisplay()
 {
-    for (int i = 0; i < lc.getDeviceCount(); i++)
+    for (uint8_t i = 0; i < lc.getDeviceCount(); i++)
     {
         lc.clearDisplay(i);
     }
+    for (uint8_t i = 0; i < 24; i++)
+    {
+        display_cache[i] = 0;
+        display[i] = 0U;
+    }  
 }
 
 #ifdef CALLIGRAPHY

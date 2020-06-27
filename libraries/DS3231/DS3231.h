@@ -8,9 +8,6 @@
 
   Credits to John Boxall at tronixstuff.com,
   see http://tinyurl.com/lw8umcp
-
-  TODO use aTime structs to store all times instead of individual uint8_t's.
-
 */
 
 #ifndef DS3231_h

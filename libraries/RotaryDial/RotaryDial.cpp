@@ -15,7 +15,7 @@ RotaryDial::RotaryDial(uint8_t pin1, uint8_t pin2)
     enc = new Encoder(pin1, pin2);
 }
 
-// TODO make fast rotation depend on rate of rotation - faster for faster rotation.
+// Reported rotation ticks depend on how fast the dial is turned
 int16_t RotaryDial::getRotation()
 {
     currentPosition = enc->read() / 4;
@@ -27,6 +27,7 @@ int16_t RotaryDial::getRotation()
         timeDelta = now - then;
         if (timeDelta <= fastRotThres)
         {
+            // Turn faster --> More ticks reported
             rotation *= (4 + fastRotThres / timeDelta);
         }
         lastPosition = currentPosition;

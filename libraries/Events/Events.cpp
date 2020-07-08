@@ -38,7 +38,11 @@ void ButtonSource::buttonCallback()
     }
 }
 
-// TODO use internal FSM to distinguish long / short button presses.
+/* TODO use internal FSM to distinguish long / short button presses.
+ * This should be some sort of "driven FSM". Again defined by a nested struct (?).
+ * Currently there is too much if-else logic contained in both buttonCallback and
+ * poll. This should all go into poll.
+ */
 void ButtonSource::poll(anEvent * e)
 {
     uint32_t now = micros();

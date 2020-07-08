@@ -70,15 +70,7 @@ class EventSource
 
 // button change events (it has just been pressed etc.)
 enum _buttonChange {press, release, disregardRelease, none};
-// button state (it currently is down etc.)
-//enum _buttonState {pressed, released, initialUndefined};
 
-
-// TODO Build FSM internal to Button class to distinguish short/long button press.
-// NOTE: Deciding whether the button was pressed long or short should be handled inside the ButtonSource class,
-// probably inside the poll function (where the duration since the last change is checked).
-// The long/short press differentiation should not seep out into the top-level FSM.
-// If it did, we'd probably require more states there and that's naff.
 class ButtonSource: EventSource
 {
     public:
